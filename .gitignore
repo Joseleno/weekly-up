@@ -1,0 +1,153 @@
+# ══════════════════════════════════════════════════════════════
+# WeeklyUp — .gitignore (Monorepo: .NET 8 + Next.js + MAUI)
+# ══════════════════════════════════════════════════════════════
+
+# ─── .NET / C# ────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+# Build results
+*.dll
+*.exe
+*.pdb
+*.cache
+*.ilk
+*.lib
+*.sbr
+*.sln.docstats
+*.suo
+*.user
+*.userosscache
+*.sln.ide/
+
+# NuGet
+**/packages/
+*.nupkg
+*.snupkg
+**/project.lock.json
+**/project.fragment.lock.json
+artifacts/
+
+# .NET Core / ASP.NET
+project.nuget.cache
+
+# User secrets
+secrets.json
+
+# dotnet tool
+.dotnet/
+.store/
+
+# Code coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+*.opencover.xml
+lcov.info
+
+# ─── .NET MAUI / Mobile ──────────────────────────────────────
+*.app
+*.ipa
+*.apk
+*.aab
+*.dSYM/
+*.xcarchive/
+
+# Android
+mobile/**/google-services.json
+mobile/**/keystore.jks
+mobile/**/*.keystore
+
+# iOS
+mobile/**/Provisioning/
+mobile/**/*.mobileprovision
+
+# ─── Next.js / Node.js ───────────────────────────────────────
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+frontend/.turbo/
+
+# ─── Environment & Secrets ────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+
+# ─── IDE / Editores ──────────────────────────────────────────
+# Visual Studio
+.vs/
+*.sln.ide/
+launchSettings.json
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains (Rider)
+.idea/
+*.sln.iml
+
+# Visual Studio for Mac
+.vsmac/
+
+# ─── OS ──────────────────────────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+# ─── Docker ──────────────────────────────────────────────────
+docker/data/
+docker/volumes/
+docker/**/*.log
+
+# ─── Hangfire ────────────────────────────────────────────────
+Hangfire-*.db
+
+# ─── Logs ────────────────────────────────────────────────────
+logs/
+*.log
+Serilog/
+
+# ─── Misc ────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.swp
+*.bak
+*.orig
