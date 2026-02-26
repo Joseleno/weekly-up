@@ -179,5 +179,4 @@ finally
 }
 
 // Required for WebApplicationFactory in E2E tests
-internal static partial class Program
-{ }
+public partial class Program { }

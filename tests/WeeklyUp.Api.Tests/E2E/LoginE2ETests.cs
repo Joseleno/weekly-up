@@ -25,11 +25,11 @@ public sealed class LoginE2ETests : IAsyncLifetime
     public async Task Login_ComExternalAuthIdValido_RetornaToken()
     {
         // Arrange — registra um usuário para ter dados no banco
-        const string externalAuthId = "google-oauth2|123456789";
-        const string email = "joao@exemplo.com";
-        await RegisterUserAsync(email, externalAuthId);
+        const string ExternalAuthId = "google-oauth2|123456789";
+        const string Email = "joao@exemplo.com";
+        await RegisterUserAsync(Email, ExternalAuthId);
 
-        var request = new { ExternalAuthId = externalAuthId, Email = email };
+        var request = new { ExternalAuthId = ExternalAuthId, Email = Email };
 
         // Act
         HttpResponseMessage response = await _fixture.Client
@@ -49,16 +49,16 @@ public sealed class LoginE2ETests : IAsyncLifetime
     public async Task Login_ComEmailValido_QuandoExternalAuthIdNaoExiste_RetornaToken()
     {
         // Arrange — usuário sem ExternalAuthId
-        const string email = "maria@exemplo.com";
-        await RegisterUserAsync(email, externalAuthId: null);
+        const string Email = "maria@exemplo.com";
+        await RegisterUserAsync(Email, ExternalAuthId: null);
 
-        var request = new { ExternalAuthId = "nao-existe-id", Email = email };
+        var request = new { ExternalAuthId = "nao-existe-id", Email = Email };
 
         // Act
         HttpResponseMessage response = await _fixture.Client
             .PostAsJsonAsync("/api/auth/login", request);
 
-        // Assert — encontrou pelo email como fallback
+        // Assert — encontrou pelo Email como fallback
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         AuthTokenDto? body = await response.Content.ReadFromJsonAsync<AuthTokenDto>();
@@ -83,7 +83,7 @@ public sealed class LoginE2ETests : IAsyncLifetime
     public async Task Login_ComEmailInvalido_Retorna422()
     {
         // Arrange
-        var request = new { ExternalAuthId = "qualquer-id", Email = "nao-e-um-email" };
+        var request = new { ExternalAuthId = "qualquer-id", Email = "nao-e-um-Email" };
 
         // Act
         HttpResponseMessage response = await _fixture.Client
@@ -109,15 +109,15 @@ public sealed class LoginE2ETests : IAsyncLifetime
 
     // ─── Helpers ────────────────────────────────────────────────────────────
 
-    private async Task RegisterUserAsync(string email, string? externalAuthId)
+    private async Task RegisterUserAsync(string Email, string? ExternalAuthId)
     {
         var request = new
         {
-            Email = email,
+            Email = Email,
             Name = "Usuário Teste",
             BusinessName = "Loja Teste",
             BusinessType = BusinessType.Ecommerce,
-            ExternalAuthId = externalAuthId,
+            ExternalAuthId = ExternalAuthId,
         };
 
         HttpResponseMessage response = await _fixture.Client

@@ -11,7 +11,7 @@ namespace WeeklyUp.Infrastructure.AI;
 
 public sealed class ClaudeInsightGenerator : IInsightGenerator
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
@@ -66,7 +66,7 @@ public sealed class ClaudeInsightGenerator : IInsightGenerator
             messages = new[] { new { role = "user", content = prompt } },
         };
 
-        var response = await _httpClient.PostAsJsonAsync("/v1/messages", request, JsonOptions, ct);
+        var response = await _httpClient.PostAsJsonAsync("/v1/messages", request, _jsonOptions, ct);
         response.EnsureSuccessStatusCode();
 
         var body = await response.Content.ReadAsStringAsync(ct);

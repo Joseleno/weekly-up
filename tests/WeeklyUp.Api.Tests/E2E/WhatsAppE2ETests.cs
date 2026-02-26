@@ -75,11 +75,11 @@ public sealed class WhatsAppE2ETests : IAsyncLifetime
     public async Task EnviarRelatorio_ViaEndpointGenerateReport_DisparaWhatsApp()
     {
         // Arrange — registra usuário e faz login para obter token
-        const string externalAuthId = "google|whatsapp-test-user";
-        const string email = "whatsapp-test@exemplo.com";
+        const string ExternalAuthId = "google|whatsapp-test-user";
+        const string Email = "whatsapp-test@exemplo.com";
 
-        await RegistrarUsuarioAsync(email, externalAuthId);
-        string token = await ObterTokenAsync(externalAuthId, email);
+        await RegistrarUsuarioAsync(Email, ExternalAuthId);
+        string token = await ObterTokenAsync(ExternalAuthId, Email);
 
         _fixture.Client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token);
@@ -103,24 +103,24 @@ public sealed class WhatsAppE2ETests : IAsyncLifetime
         return Report.Create(Guid.NewGuid(), weekRangeResult.Value);
     }
 
-    private async Task RegistrarUsuarioAsync(string email, string externalAuthId)
+    private async Task RegistrarUsuarioAsync(string Email, string ExternalAuthId)
     {
         var request = new
         {
-            Email = email,
+            Email = Email,
             Name = "Usuário WhatsApp Teste",
             BusinessName = "Loja WhatsApp",
             BusinessType = BusinessType.Ecommerce,
-            ExternalAuthId = externalAuthId,
+            ExternalAuthId = ExternalAuthId,
         };
 
         (await _fixture.Client.PostAsJsonAsync("/api/users", request))
             .EnsureSuccessStatusCode();
     }
 
-    private async Task<string> ObterTokenAsync(string externalAuthId, string email)
+    private async Task<string> ObterTokenAsync(string ExternalAuthId, string Email)
     {
-        var request = new { ExternalAuthId = externalAuthId, Email = email };
+        var request = new { ExternalAuthId = ExternalAuthId, Email = Email };
 
         HttpResponseMessage response = await _fixture.Client
             .PostAsJsonAsync("/api/auth/login", request);

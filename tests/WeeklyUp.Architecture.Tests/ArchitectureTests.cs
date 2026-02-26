@@ -7,13 +7,13 @@ namespace WeeklyUp.Architecture.Tests;
 public sealed class ArchitectureTests
 {
     // Assemblies
-    private static readonly Assembly DomainAssembly =
+    private static readonly Assembly _domainAssembly =
         typeof(WeeklyUp.Domain.Common.Entity).Assembly;
 
-    private static readonly Assembly ApplicationAssembly =
+    private static readonly Assembly _applicationAssembly =
         typeof(WeeklyUp.Application.ApplicationServiceExtensions).Assembly;
 
-    private static readonly Assembly InfrastructureAssembly =
+    private static readonly Assembly _infrastructureAssembly =
         typeof(WeeklyUp.Infrastructure.InfrastructureServiceExtensions).Assembly;
 
     // -----------------------------------------------
@@ -23,7 +23,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Domain_ShouldNot_DependOn_Application()
     {
-        var result = Types.InAssembly(DomainAssembly)
+        var result = Types.InAssembly(_domainAssembly)
             .ShouldNot()
             .HaveDependencyOn("WeeklyUp.Application")
             .GetResult();
@@ -37,7 +37,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Domain_ShouldNot_DependOn_Infrastructure()
     {
-        var result = Types.InAssembly(DomainAssembly)
+        var result = Types.InAssembly(_domainAssembly)
             .ShouldNot()
             .HaveDependencyOn("WeeklyUp.Infrastructure")
             .GetResult();
@@ -51,7 +51,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Domain_ShouldNot_DependOn_Api()
     {
-        var result = Types.InAssembly(DomainAssembly)
+        var result = Types.InAssembly(_domainAssembly)
             .ShouldNot()
             .HaveDependencyOn("WeeklyUp.Api")
             .GetResult();
@@ -65,7 +65,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Application_ShouldNot_DependOn_Infrastructure()
     {
-        var result = Types.InAssembly(ApplicationAssembly)
+        var result = Types.InAssembly(_applicationAssembly)
             .ShouldNot()
             .HaveDependencyOn("WeeklyUp.Infrastructure")
             .GetResult();
@@ -79,7 +79,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Application_ShouldNot_DependOn_Api()
     {
-        var result = Types.InAssembly(ApplicationAssembly)
+        var result = Types.InAssembly(_applicationAssembly)
             .ShouldNot()
             .HaveDependencyOn("WeeklyUp.Api")
             .GetResult();
@@ -93,7 +93,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Infrastructure_ShouldNot_DependOn_Api()
     {
-        var result = Types.InAssembly(InfrastructureAssembly)
+        var result = Types.InAssembly(_infrastructureAssembly)
             .ShouldNot()
             .HaveDependencyOn("WeeklyUp.Api")
             .GetResult();
@@ -111,7 +111,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void CommandHandlers_ShouldEndWith_Handler()
     {
-        var result = Types.InAssembly(ApplicationAssembly)
+        var result = Types.InAssembly(_applicationAssembly)
             .That()
             .ImplementInterface(typeof(Mediator.ICommandHandler<,>))
             .Should()
@@ -127,7 +127,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void QueryHandlers_ShouldEndWith_Handler()
     {
-        var result = Types.InAssembly(ApplicationAssembly)
+        var result = Types.InAssembly(_applicationAssembly)
             .That()
             .ImplementInterface(typeof(Mediator.IQueryHandler<,>))
             .Should()
@@ -143,7 +143,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Validators_ShouldEndWith_Validator()
     {
-        var result = Types.InAssembly(ApplicationAssembly)
+        var result = Types.InAssembly(_applicationAssembly)
             .That()
             .Inherit(typeof(FluentValidation.AbstractValidator<>))
             .Should()
@@ -159,7 +159,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Repositories_ShouldEndWith_Repository()
     {
-        var result = Types.InAssembly(InfrastructureAssembly)
+        var result = Types.InAssembly(_infrastructureAssembly)
             .That()
             .ResideInNamespace("WeeklyUp.Infrastructure.Persistence.Repositories")
             .And()
@@ -177,7 +177,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Interfaces_ShouldStartWith_I()
     {
-        var domainResult = Types.InAssembly(DomainAssembly)
+        var domainResult = Types.InAssembly(_domainAssembly)
             .That()
             .AreInterfaces()
             .Should()
@@ -189,7 +189,7 @@ public sealed class ArchitectureTests
                 ? string.Join(", ", domainResult.FailingTypeNames)
                 : "All interfaces in Domain must start with 'I'");
 
-        var appResult = Types.InAssembly(ApplicationAssembly)
+        var appResult = Types.InAssembly(_applicationAssembly)
             .That()
             .AreInterfaces()
             .Should()
@@ -209,7 +209,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Entities_ShouldResideIn_DomainEntitiesNamespace()
     {
-        var result = Types.InAssembly(DomainAssembly)
+        var result = Types.InAssembly(_domainAssembly)
             .That()
             .Inherit(typeof(WeeklyUp.Domain.Common.Entity))
             .And()
@@ -227,7 +227,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void ValueObjects_ShouldResideIn_DomainValueObjectsNamespace()
     {
-        var result = Types.InAssembly(DomainAssembly)
+        var result = Types.InAssembly(_domainAssembly)
             .That()
             .Inherit(typeof(WeeklyUp.Domain.Common.ValueObject))
             .Should()
@@ -243,7 +243,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Repositories_ShouldResideIn_InfrastructurePersistenceNamespace()
     {
-        var result = Types.InAssembly(InfrastructureAssembly)
+        var result = Types.InAssembly(_infrastructureAssembly)
             .That()
             .HaveNameEndingWith("Repository")
             .And()
@@ -266,7 +266,7 @@ public sealed class ArchitectureTests
     public void InfrastructureClasses_ShouldBeSealed()
     {
         // Excludes Refit source-generated types by filtering to WeeklyUp.Infrastructure namespace only
-        var nonSealedTypes = InfrastructureAssembly.GetTypes()
+        var nonSealedTypes = _infrastructureAssembly.GetTypes()
             .Where(t => t.IsClass
                 && !t.IsAbstract
                 && t.Namespace is not null
@@ -284,7 +284,7 @@ public sealed class ArchitectureTests
     public void DomainEntities_ShouldBeSealed()
     {
         // Domain entities are sealed by design — project convention
-        var nonSealedEntities = DomainAssembly.GetTypes()
+        var nonSealedEntities = _domainAssembly.GetTypes()
             .Where(t => t.IsClass
                 && t.Namespace == "WeeklyUp.Domain.Entities"
                 && !t.IsSealed)
@@ -298,7 +298,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void ApplicationDtos_ShouldBeSealed()
     {
-        var result = Types.InAssembly(ApplicationAssembly)
+        var result = Types.InAssembly(_applicationAssembly)
             .That()
             .ResideInNamespace("WeeklyUp.Application.Common.DTOs")
             .And()
@@ -320,7 +320,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Domain_ShouldNot_HaveEntityFrameworkDependency()
     {
-        var result = Types.InAssembly(DomainAssembly)
+        var result = Types.InAssembly(_domainAssembly)
             .ShouldNot()
             .HaveDependencyOn("Microsoft.EntityFrameworkCore")
             .GetResult();
@@ -334,7 +334,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Application_ShouldNot_HaveEntityFrameworkDependency()
     {
-        var result = Types.InAssembly(ApplicationAssembly)
+        var result = Types.InAssembly(_applicationAssembly)
             .ShouldNot()
             .HaveDependencyOn("Microsoft.EntityFrameworkCore")
             .GetResult();
@@ -348,7 +348,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void Handlers_ShouldResideIn_ApplicationNamespace()
     {
-        var result = Types.InAssembly(ApplicationAssembly)
+        var result = Types.InAssembly(_applicationAssembly)
             .That()
             .HaveNameEndingWith("Handler")
             .And()
