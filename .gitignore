@@ -151,3 +151,4 @@ Serilog/
 *.swp
 *.bak
 *.orig
+/.claude/settings.local.json
