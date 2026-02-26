@@ -15,10 +15,10 @@ jobs:
       - name: Baixar o código
         uses: actions/checkout@v4
 
-      - name: Instalar .NET 8
+      - name: Instalar .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'   # ← era '8.0.x'
 
       - name: Restaurar dependências
         run: dotnet restore WeeklyPulse.sln
