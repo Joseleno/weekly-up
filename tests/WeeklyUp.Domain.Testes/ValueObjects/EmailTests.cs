@@ -8,11 +8,8 @@ public sealed class EmailTests
     [Fact]
     public void Create_ValidEmail_ReturnsSuccess()
     {
-        // Arrange
-        const string email = "user@example.com";
-
         // Act
-        var result = Email.Create(email);
+        var result = Email.Create("user@example.com");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -22,11 +19,8 @@ public sealed class EmailTests
     [Fact]
     public void Create_ValidEmail_NormalizesToLowercase()
     {
-        // Arrange
-        const string email = "User@EXAMPLE.COM";
-
         // Act
-        var result = Email.Create(email);
+        var result = Email.Create("User@EXAMPLE.COM");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -36,11 +30,8 @@ public sealed class EmailTests
     [Fact]
     public void Create_ValidEmail_TrimsWhitespace()
     {
-        // Arrange
-        const string email = "  user@example.com  ";
-
         // Act
-        var result = Email.Create(email);
+        var result = Email.Create("  user@example.com  ");
 
         // Assert
         result.IsSuccess.Should().BeTrue();

@@ -7,7 +7,7 @@ namespace WeeklyUp.Domain.ValueObjects;
 
 public sealed class Email : ValueObject
 {
-    private static readonly Regex EmailRegex =
+    private static readonly Regex _emailRegex =
         new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
     private const int MaxLength = 255;
@@ -30,7 +30,7 @@ public sealed class Email : ValueObject
             return AppError.Validation("Email.TooLong", $"Email nao pode ter mais de {MaxLength} caracteres.");
         }
 
-        if (!EmailRegex.IsMatch(email))
+        if (!_emailRegex.IsMatch(email))
         {
             return AppError.Validation("Email.InvalidFormat", "Email em formato invalido.");
         }

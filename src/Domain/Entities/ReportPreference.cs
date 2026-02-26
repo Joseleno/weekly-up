@@ -6,7 +6,7 @@ namespace WeeklyUp.Domain.Entities;
 public sealed class ReportPreference : Entity
 {
     private const string DefaultLanguage = "pt-BR";
-    private static readonly TimeOnly DefaultSendTime = new(7, 0);
+    private static readonly TimeOnly _defaultSendTime = new(7, 0);
 
     private List<string> _enabledSections = [];
 
@@ -24,7 +24,7 @@ public sealed class ReportPreference : Entity
         {
             UserId = userId,
             SendDay = DayOfWeekPreference.Monday,
-            SendTime = DefaultSendTime,
+            SendTime = _defaultSendTime,
             Language = DefaultLanguage,
             _enabledSections = [],
         };

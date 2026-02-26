@@ -11,7 +11,7 @@ namespace WeeklyUp.Application.Integrations.Queries.GetIntegrations;
 public sealed class GetIntegrationsQueryHandler
     : IQueryHandler<GetIntegrationsQuery, Result<IReadOnlyList<IntegrationDto>>>
 {
-    private static readonly TimeSpan CacheExpiry = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(5);
 
     private readonly IUserRepository _users;
     private readonly IApplicationCacheService _cache;
@@ -46,7 +46,7 @@ public sealed class GetIntegrationsQueryHandler
             .ToList()
             .AsReadOnly();
 
-        await _cache.SetAsync(cacheKey, dtos, CacheExpiry, cancellationToken);
+        await _cache.SetAsync(cacheKey, dtos, _cacheExpiry, cancellationToken);
         return Result.Success(dtos);
     }
 }

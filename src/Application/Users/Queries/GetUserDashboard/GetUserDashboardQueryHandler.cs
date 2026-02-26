@@ -11,7 +11,7 @@ namespace WeeklyUp.Application.Users.Queries.GetUserDashboard;
 public sealed class GetUserDashboardQueryHandler
     : IQueryHandler<GetUserDashboardQuery, Result<UserDashboardDto>>
 {
-    private static readonly TimeSpan CacheExpiry = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(30);
 
     private readonly IUserRepository _users;
     private readonly IReportRepository _reports;
@@ -60,7 +60,7 @@ public sealed class GetUserDashboardQueryHandler
             Integrations: user.Integrations.Select(i => i.ToDto()).ToList(),
             HasManualMetrics: metric is not null);
 
-        await _cache.SetAsync(cacheKey, dto, CacheExpiry, cancellationToken);
+        await _cache.SetAsync(cacheKey, dto, _cacheExpiry, cancellationToken);
         return dto;
     }
 

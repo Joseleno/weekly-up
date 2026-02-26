@@ -11,7 +11,7 @@ namespace WeeklyUp.Application.Users.Queries.GetUserProfile;
 public sealed class GetUserProfileQueryHandler
     : IQueryHandler<GetUserProfileQuery, Result<UserProfileDto>>
 {
-    private static readonly TimeSpan CacheExpiry = TimeSpan.FromHours(24);
+    private static readonly TimeSpan _cacheExpiry = TimeSpan.FromHours(24);
 
     private readonly IUserRepository _users;
     private readonly IApplicationCacheService _cache;
@@ -42,7 +42,7 @@ public sealed class GetUserProfileQueryHandler
         }
 
         var dto = user.ToProfileDto();
-        await _cache.SetAsync(cacheKey, dto, CacheExpiry, cancellationToken);
+        await _cache.SetAsync(cacheKey, dto, _cacheExpiry, cancellationToken);
         return dto;
     }
 }

@@ -11,7 +11,7 @@ namespace WeeklyUp.Application.Reports.Queries.GetReportDetail;
 public sealed class GetReportDetailQueryHandler
     : IQueryHandler<GetReportDetailQuery, Result<ReportDetailDto>>
 {
-    private static readonly TimeSpan CacheExpiry = TimeSpan.FromHours(1);
+    private static readonly TimeSpan _cacheExpiry = TimeSpan.FromHours(1);
 
     private readonly IReportRepository _reports;
     private readonly IApplicationCacheService _cache;
@@ -47,7 +47,7 @@ public sealed class GetReportDetailQueryHandler
         }
 
         var dto = report.ToDetailDto();
-        await _cache.SetAsync(cacheKey, dto, CacheExpiry, cancellationToken);
+        await _cache.SetAsync(cacheKey, dto, _cacheExpiry, cancellationToken);
         return dto;
     }
 }

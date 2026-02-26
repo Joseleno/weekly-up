@@ -8,11 +8,8 @@ public sealed class BusinessNameTests
     [Fact]
     public void Create_ValidName_ReturnsSuccess()
     {
-        // Arrange
-        const string name = "Minha Loja";
-
         // Act
-        var result = BusinessName.Create(name);
+        var result = BusinessName.Create("Minha Loja");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -22,11 +19,8 @@ public sealed class BusinessNameTests
     [Fact]
     public void Create_ValidNameWithWhitespace_Trims()
     {
-        // Arrange
-        const string name = "  Loja  ";
-
         // Act
-        var result = BusinessName.Create(name);
+        var result = BusinessName.Create("  Loja  ");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -50,11 +44,8 @@ public sealed class BusinessNameTests
     [Fact]
     public void Create_SingleCharacterName_ReturnsFailure()
     {
-        // Arrange
-        const string name = "A";
-
         // Act
-        var result = BusinessName.Create(name);
+        var result = BusinessName.Create("A");
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -92,11 +83,8 @@ public sealed class BusinessNameTests
     [Fact]
     public void Create_ExactlyMinLength_ReturnsSuccess()
     {
-        // Arrange
-        const string name = "AB"; // 2 caracteres — limite minimo exato
-
         // Act
-        var result = BusinessName.Create(name);
+        var result = BusinessName.Create("AB"); // 2 caracteres — limite minimo exato
 
         // Assert
         result.IsSuccess.Should().BeTrue();
