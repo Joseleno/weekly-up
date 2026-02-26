@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+
 using WeeklyUp.Domain.Interfaces.Repositories;
 
 namespace WeeklyUp.Infrastructure.BackgroundJobs;

@@ -1,5 +1,7 @@
 using FluentAssertions;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Common.DTOs;
 using WeeklyUp.Application.Users.Commands.RegisterUser;
 using WeeklyUp.Domain.Entities;

@@ -1,5 +1,7 @@
 using FluentAssertions;
+
 using FluentValidation.TestHelper;
+
 using WeeklyUp.Application.Users.Commands.RegisterUser;
 using WeeklyUp.Domain.Enums;
 

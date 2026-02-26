@@ -1,5 +1,7 @@
 using System.Text.Json;
+
 using StackExchange.Redis;
+
 using WeeklyUp.Application.Common.Interfaces;
 
 namespace WeeklyUp.Infrastructure.Caching;

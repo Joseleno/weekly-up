@@ -1,4 +1,5 @@
 using Mediator;
+
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Interfaces;
 using WeeklyUp.Shared.Results;

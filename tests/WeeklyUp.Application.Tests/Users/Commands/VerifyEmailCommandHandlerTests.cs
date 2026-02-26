@@ -1,5 +1,7 @@
 using FluentAssertions;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Users.Commands.VerifyEmail;
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;

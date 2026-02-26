@@ -1,7 +1,11 @@
 using FluentAssertions;
+
 using Mediator;
+
 using Microsoft.Extensions.Logging;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Common.Behaviors;
 
 namespace WeeklyUp.Application.Tests.Common.Behaviors;

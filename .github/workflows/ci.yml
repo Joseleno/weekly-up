@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
-    name: Build e Testes
+  unit-tests:
+    name: Build e Testes Unitários
     runs-on: ubuntu-latest
 
     steps:
@@ -26,5 +26,78 @@ jobs:
       - name: Build
         run: dotnet build WeeklyUp.slnx --no-restore --configuration Release
 
-      - name: Rodar testes
-        run: dotnet test WeeklyUp.slnx --no-build --configuration Release
+      - name: Rodar testes unitários (excluindo E2E)
+        run: |
+          dotnet test WeeklyUp.slnx \
+            --no-build \
+            --configuration Release \
+            --filter "Category!=E2E&Category!=WhatsApp" \
+            --logger "trx;LogFileName=test-results.trx"
+
+      - name: Publicar resultado dos testes
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: "**/*.trx"
+
+  e2e-tests:
+    name: Testes E2E (com PostgreSQL)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: weeklyup_e2e
+          POSTGRES_USER: weeklyup
+          POSTGRES_PASSWORD: weeklyup123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restaurar dependências
+        run: dotnet restore WeeklyUp.slnx
+
+      - name: Build
+        run: dotnet build WeeklyUp.slnx --no-restore --configuration Release
+
+      - name: Rodar testes E2E
+        run: |
+          dotnet test tests/WeeklyUp.Api.Tests \
+            --no-build \
+            --configuration Release \
+            --filter "Category!=WhatsApp" \
+            --logger "trx;LogFileName=e2e-results.trx"
+        env:
+          ASPNETCORE_ENVIRONMENT: Testing
+
+      - name: Publicar resultado dos testes E2E
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results
+          path: "**/*.trx"

@@ -1,8 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using WeeklyUp.Api.Tests.Infrastructure;
 using WeeklyUp.Application.Common.DTOs;
 using WeeklyUp.Application.Common.Interfaces;
@@ -20,6 +23,7 @@ namespace WeeklyUp.Api.Tests.E2E;
 ///         com instância "weeklyup" conectada (QR Code escaneado).
 /// </summary>
 [Collection("E2E")]
+[Trait("Category", "E2E")]
 [Trait("Category", "WhatsApp")]
 public sealed class WhatsAppE2ETests : IAsyncLifetime
 {
@@ -75,11 +79,11 @@ public sealed class WhatsAppE2ETests : IAsyncLifetime
     public async Task EnviarRelatorio_ViaEndpointGenerateReport_DisparaWhatsApp()
     {
         // Arrange — registra usuário e faz login para obter token
-        const string externalAuthId = "google|whatsapp-test-user";
-        const string email = "whatsapp-test@exemplo.com";
+        const string ExternalAuthId = "google|whatsapp-test-user";
+        const string Email = "whatsapp-test@exemplo.com";
 
-        await RegistrarUsuarioAsync(email, externalAuthId);
-        string token = await ObterTokenAsync(externalAuthId, email);
+        await RegistrarUsuarioAsync(Email, ExternalAuthId);
+        string token = await ObterTokenAsync(ExternalAuthId, Email);
 
         _fixture.Client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token);
@@ -97,7 +101,7 @@ public sealed class WhatsAppE2ETests : IAsyncLifetime
     private static Report CriarReportFake()
     {
         Result<DateRange> weekRangeResult = DateRange.Create(
-            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-6)),
             DateOnly.FromDateTime(DateTime.UtcNow));
 
         return Report.Create(Guid.NewGuid(), weekRangeResult.Value);

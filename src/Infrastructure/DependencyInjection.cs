@@ -1,13 +1,19 @@
 using Hangfire;
 using Hangfire.PostgreSql;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Polly;
+
 using Refit;
+
 using StackExchange.Redis;
+
 using Stripe;
+
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Interfaces;
 using WeeklyUp.Domain.Interfaces.Repositories;

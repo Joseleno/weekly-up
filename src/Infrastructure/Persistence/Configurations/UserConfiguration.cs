@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;
 

@@ -1,8 +1,12 @@
 using FluentAssertions;
+
 using FluentValidation;
 using FluentValidation.Results;
+
 using Mediator;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Common.Behaviors;
 
 namespace WeeklyUp.Application.Tests.Common.Behaviors;

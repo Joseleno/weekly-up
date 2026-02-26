@@ -1,4 +1,5 @@
 using FluentAssertions;
+
 using WeeklyUp.Infrastructure.Time;
 
 namespace WeeklyUp.Infrastructure.Tests.Time;

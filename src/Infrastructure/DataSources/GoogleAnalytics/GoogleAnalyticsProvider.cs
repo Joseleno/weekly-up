@@ -1,5 +1,7 @@
 using System.Globalization;
+
 using Microsoft.Extensions.Logging;
+
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.ValueObjects;

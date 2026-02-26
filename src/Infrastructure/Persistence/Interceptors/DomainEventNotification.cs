@@ -1,4 +1,5 @@
 using Mediator;
+
 using WeeklyUp.Domain.Common;
 
 namespace WeeklyUp.Infrastructure.Persistence.Interceptors;

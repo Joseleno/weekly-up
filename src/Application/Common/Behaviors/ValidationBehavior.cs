@@ -1,4 +1,5 @@
 using FluentValidation;
+
 using Mediator;
 
 namespace WeeklyUp.Application.Common.Behaviors;

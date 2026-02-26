@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Interfaces.Services;
 using WeeklyUp.Shared.Results;

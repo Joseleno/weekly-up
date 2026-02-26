@@ -1,4 +1,5 @@
 using FluentValidation;
+
 using WeeklyUp.Domain.Enums;
 
 namespace WeeklyUp.Application.Users.Commands.UpgradePlan;

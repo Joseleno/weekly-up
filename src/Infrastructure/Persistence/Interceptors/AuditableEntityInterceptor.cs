@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Common;
 

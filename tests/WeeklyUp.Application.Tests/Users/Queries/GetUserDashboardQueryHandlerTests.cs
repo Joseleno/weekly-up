@@ -1,5 +1,7 @@
 using FluentAssertions;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Common.DTOs;
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Application.Users.Queries.GetUserDashboard;

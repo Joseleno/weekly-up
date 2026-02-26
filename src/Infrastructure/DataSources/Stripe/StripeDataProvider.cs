@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
+
 using Stripe;
+
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.ValueObjects;
