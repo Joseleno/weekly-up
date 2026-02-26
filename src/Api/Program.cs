@@ -1,3 +1,6 @@
+using System.Text;
+using System.Threading.RateLimiting;
+
 using Carter;
 
 using Hangfire;
@@ -12,9 +15,6 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 using Serilog;
-
-using System.Text;
-using System.Threading.RateLimiting;
 
 using WeeklyUp.Api.Middleware;
 using WeeklyUp.Application;

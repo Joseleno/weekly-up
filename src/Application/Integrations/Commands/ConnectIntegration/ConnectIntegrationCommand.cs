@@ -1,4 +1,5 @@
 using Mediator;
+
 using WeeklyUp.Application.Common.DTOs;
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Shared.Results;

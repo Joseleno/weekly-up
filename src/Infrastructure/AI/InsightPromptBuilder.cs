@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.ValueObjects;
 

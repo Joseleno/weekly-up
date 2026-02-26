@@ -1,5 +1,7 @@
 using FluentAssertions;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;

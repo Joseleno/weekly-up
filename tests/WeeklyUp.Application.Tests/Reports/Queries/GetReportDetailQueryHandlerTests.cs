@@ -1,11 +1,13 @@
 using FluentAssertions;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Common.DTOs;
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Application.Reports.Queries.GetReportDetail;
 using WeeklyUp.Domain.Entities;
-using WeeklyUp.Domain.ValueObjects;
 using WeeklyUp.Domain.Interfaces.Repositories;
+using WeeklyUp.Domain.ValueObjects;
 using WeeklyUp.Shared.Constants;
 using WeeklyUp.Shared.Results;
 

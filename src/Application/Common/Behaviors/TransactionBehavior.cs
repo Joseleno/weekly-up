@@ -1,5 +1,7 @@
 using Mediator;
+
 using Microsoft.Extensions.Logging;
+
 using WeeklyUp.Domain.Interfaces;
 
 namespace WeeklyUp.Application.Common.Behaviors;

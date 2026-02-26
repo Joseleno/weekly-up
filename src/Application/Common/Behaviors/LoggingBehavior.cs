@@ -1,5 +1,7 @@
 using System.Diagnostics;
+
 using Mediator;
+
 using Microsoft.Extensions.Logging;
 
 namespace WeeklyUp.Application.Common.Behaviors;

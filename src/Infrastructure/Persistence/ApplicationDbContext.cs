@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using WeeklyUp.Domain.Entities;
 
 namespace WeeklyUp.Infrastructure.Persistence;

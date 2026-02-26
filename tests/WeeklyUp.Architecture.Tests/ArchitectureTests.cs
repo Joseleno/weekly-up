@@ -1,5 +1,7 @@
 using System.Reflection;
+
 using FluentAssertions;
+
 using NetArchTest.Rules;
 
 namespace WeeklyUp.Architecture.Tests;

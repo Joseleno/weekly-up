@@ -1,10 +1,12 @@
 using FluentAssertions;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Common.DTOs;
 using WeeklyUp.Application.Reports.Queries.GetReportHistory;
 using WeeklyUp.Domain.Entities;
-using WeeklyUp.Domain.ValueObjects;
 using WeeklyUp.Domain.Interfaces.Repositories;
+using WeeklyUp.Domain.ValueObjects;
 using WeeklyUp.Shared.Results;
 
 namespace WeeklyUp.Application.Tests.Reports.Queries;

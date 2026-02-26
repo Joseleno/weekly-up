@@ -1,4 +1,5 @@
 using Mediator;
+
 using WeeklyUp.Shared.Results;
 
 namespace WeeklyUp.Application.Reports.Commands.GenerateWeeklyReport;

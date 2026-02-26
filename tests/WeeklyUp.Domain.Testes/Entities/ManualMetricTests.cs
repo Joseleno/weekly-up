@@ -1,4 +1,5 @@
 using FluentAssertions;
+
 using WeeklyUp.Domain.Entities;
 
 namespace WeeklyUp.Domain.Testes.Entities;

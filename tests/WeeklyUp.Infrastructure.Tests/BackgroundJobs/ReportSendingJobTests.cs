@@ -1,6 +1,9 @@
 using FluentAssertions;
+
 using Microsoft.Extensions.Logging;
+
 using NSubstitute;
+
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.Interfaces;

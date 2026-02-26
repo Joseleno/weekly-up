@@ -1,12 +1,16 @@
 using System.IdentityModel.Tokens.Jwt;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.Options;
-using WeeklyUp.Domain.Enums;
+
+using NSubstitute;
+
 using WeeklyUp.Domain.Entities;
+using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.Interfaces.Services;
 using WeeklyUp.Infrastructure.Security;
 using WeeklyUp.Shared.Constants;
-using NSubstitute;
 
 namespace WeeklyUp.Infrastructure.Tests.Security;
 

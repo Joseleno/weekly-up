@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+
 using Npgsql;
+
 using Respawn;
+
 using WeeklyUp.Infrastructure.Persistence;
 
 namespace WeeklyUp.Api.Tests.Infrastructure;

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.Interfaces.Repositories;

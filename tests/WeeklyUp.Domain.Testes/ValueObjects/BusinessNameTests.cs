@@ -1,4 +1,5 @@
 using FluentAssertions;
+
 using WeeklyUp.Domain.ValueObjects;
 
 namespace WeeklyUp.Domain.Testes.ValueObjects;

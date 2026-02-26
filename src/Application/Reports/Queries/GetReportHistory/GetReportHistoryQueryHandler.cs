@@ -1,4 +1,5 @@
 using Mediator;
+
 using WeeklyUp.Application.Common.DTOs;
 using WeeklyUp.Application.Common.Mappings;
 using WeeklyUp.Domain.Interfaces.Repositories;

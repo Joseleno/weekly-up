@@ -1,5 +1,7 @@
 using Carter;
+
 using Mediator;
+
 using WeeklyUp.Api.Extensions;
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Application.Reports.Commands.GenerateWeeklyReport;

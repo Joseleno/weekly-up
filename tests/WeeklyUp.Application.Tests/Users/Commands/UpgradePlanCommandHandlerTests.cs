@@ -1,5 +1,7 @@
 using FluentAssertions;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Users.Commands.UpgradePlan;
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;

@@ -1,7 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.ValueObjects;

@@ -1,5 +1,7 @@
 using Mediator;
+
 using Microsoft.Extensions.Logging;
+
 using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Application.Reports.Commands.GenerateWeeklyReport;
 using WeeklyUp.Domain.Enums;

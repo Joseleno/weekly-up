@@ -1,4 +1,5 @@
 using FluentAssertions;
+
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;
 

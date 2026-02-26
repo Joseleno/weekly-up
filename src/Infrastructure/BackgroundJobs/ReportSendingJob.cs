@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+
 using WeeklyUp.Domain.Interfaces;
 using WeeklyUp.Domain.Interfaces.Services;
 

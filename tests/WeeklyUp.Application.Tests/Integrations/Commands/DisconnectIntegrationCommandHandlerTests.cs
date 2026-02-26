@@ -1,5 +1,7 @@
 using FluentAssertions;
+
 using NSubstitute;
+
 using WeeklyUp.Application.Integrations.Commands.DisconnectIntegration;
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;
