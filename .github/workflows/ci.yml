@@ -21,10 +21,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restaurar dependências
-        run: dotnet restore WeeklyPulse.slnx
+        run: dotnet restore WeeklyUp.slnx
 
       - name: Build
-        run: dotnet build WeeklyPulse.slnx --no-restore --configuration Release
+        run: dotnet build WeeklyUp.slnx --no-restore --configuration Release
 
       - name: Rodar testes
-        run: dotnet test WeeklyPulse.slnx --no-build --configuration Release
+        run: dotnet test WeeklyUp.slnx --no-build --configuration Release
