@@ -7,4 +7,5 @@ public interface IIntegrationRepository
     public Task<Integration?> GetByIdAsync(Guid id, CancellationToken ct = default);
     public Task<IReadOnlyList<Integration>> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
     public Task<IReadOnlyList<Integration>> GetActiveWithExpiredTokensAsync(CancellationToken ct = default);
+    public void Update(Integration integration);
 }
