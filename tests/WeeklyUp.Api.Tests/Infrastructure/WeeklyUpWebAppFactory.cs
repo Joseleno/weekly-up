@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,9 @@ public sealed class WeeklyUpWebAppFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(ConnectionString));
+
+            // Substitui Hangfire PostgreSQL por in-memory para evitar conexão ao banco durante testes
+            services.AddHangfire(cfg => cfg.UseInMemoryStorage());
         });
 
         builder.ConfigureAppConfiguration((_, config) =>

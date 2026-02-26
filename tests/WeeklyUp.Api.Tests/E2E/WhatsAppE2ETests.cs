@@ -103,24 +103,24 @@ public sealed class WhatsAppE2ETests : IAsyncLifetime
         return Report.Create(Guid.NewGuid(), weekRangeResult.Value);
     }
 
-    private async Task RegistrarUsuarioAsync(string Email, string ExternalAuthId)
+    private async Task RegistrarUsuarioAsync(string email, string externalAuthId)
     {
         var request = new
         {
-            Email = Email,
+            Email = email,
             Name = "Usuário WhatsApp Teste",
             BusinessName = "Loja WhatsApp",
             BusinessType = BusinessType.Ecommerce,
-            ExternalAuthId = ExternalAuthId,
+            ExternalAuthId = externalAuthId,
         };
 
         (await _fixture.Client.PostAsJsonAsync("/api/users", request))
             .EnsureSuccessStatusCode();
     }
 
-    private async Task<string> ObterTokenAsync(string ExternalAuthId, string Email)
+    private async Task<string> ObterTokenAsync(string externalAuthId, string email)
     {
-        var request = new { ExternalAuthId = ExternalAuthId, Email = Email };
+        var request = new { ExternalAuthId = externalAuthId, Email = email };
 
         HttpResponseMessage response = await _fixture.Client
             .PostAsJsonAsync("/api/auth/login", request);

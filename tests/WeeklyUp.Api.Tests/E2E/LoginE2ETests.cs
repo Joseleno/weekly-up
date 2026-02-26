@@ -50,7 +50,7 @@ public sealed class LoginE2ETests : IAsyncLifetime
     {
         // Arrange — usuário sem ExternalAuthId
         const string Email = "maria@exemplo.com";
-        await RegisterUserAsync(Email, ExternalAuthId: null);
+        await RegisterUserAsync(Email, externalAuthId: null);
 
         var request = new { ExternalAuthId = "nao-existe-id", Email = Email };
 
@@ -109,15 +109,15 @@ public sealed class LoginE2ETests : IAsyncLifetime
 
     // ─── Helpers ────────────────────────────────────────────────────────────
 
-    private async Task RegisterUserAsync(string Email, string? ExternalAuthId)
+    private async Task RegisterUserAsync(string email, string? externalAuthId)
     {
         var request = new
         {
-            Email = Email,
+            Email = email,
             Name = "Usuário Teste",
             BusinessName = "Loja Teste",
             BusinessType = BusinessType.Ecommerce,
-            ExternalAuthId = ExternalAuthId,
+            ExternalAuthId = externalAuthId,
         };
 
         HttpResponseMessage response = await _fixture.Client
