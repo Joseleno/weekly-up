@@ -18,13 +18,13 @@ jobs:
       - name: Instalar .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'   # ← era '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Restaurar dependências
-        run: dotnet restore WeeklyPulse.sln
+        run: dotnet restore WeeklyPulse.slnx
 
       - name: Build
-        run: dotnet build WeeklyPulse.sln --no-restore --configuration Release
+        run: dotnet build WeeklyPulse.slnx --no-restore --configuration Release
 
       - name: Rodar testes
-        run: dotnet test WeeklyPulse.sln --no-build --configuration Release
+        run: dotnet test WeeklyPulse.slnx --no-build --configuration Release
