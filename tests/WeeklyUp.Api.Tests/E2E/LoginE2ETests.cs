@@ -10,6 +10,7 @@ using WeeklyUp.Infrastructure.Persistence;
 namespace WeeklyUp.Api.Tests.E2E;
 
 [Collection("E2E")]
+[Trait("Category", "E2E")]
 public sealed class LoginE2ETests : IAsyncLifetime
 {
     private readonly DatabaseFixture _fixture;

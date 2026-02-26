@@ -20,6 +20,7 @@ namespace WeeklyUp.Api.Tests.E2E;
 ///         com instância "weeklyup" conectada (QR Code escaneado).
 /// </summary>
 [Collection("E2E")]
+[Trait("Category", "E2E")]
 [Trait("Category", "WhatsApp")]
 public sealed class WhatsAppE2ETests : IAsyncLifetime
 {
