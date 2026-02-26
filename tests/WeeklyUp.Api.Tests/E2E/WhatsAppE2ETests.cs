@@ -97,7 +97,7 @@ public sealed class WhatsAppE2ETests : IAsyncLifetime
     private static Report CriarReportFake()
     {
         Result<DateRange> weekRangeResult = DateRange.Create(
-            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-6)),
             DateOnly.FromDateTime(DateTime.UtcNow));
 
         return Report.Create(Guid.NewGuid(), weekRangeResult.Value);

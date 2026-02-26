@@ -20,7 +20,7 @@ public sealed class JwtTokenGeneratorTests
     private static JwtTokenGenerator CreateGenerator() =>
         new(Options.Create(new JwtOptions
         {
-            Secret = ValidSecret,
+            Key = ValidSecret,
             Issuer = TestIssuer,
             Audience = TestAudience,
             ExpirationMinutes = ExpirationMinutes,

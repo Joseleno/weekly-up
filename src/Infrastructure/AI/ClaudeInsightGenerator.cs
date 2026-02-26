@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using WeeklyUp.Application.Common.Interfaces;
+using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.ValueObjects;
 using WeeklyUp.Shared.Results;
 
@@ -10,7 +11,7 @@ namespace WeeklyUp.Infrastructure.AI;
 
 public sealed class ClaudeInsightGenerator : IInsightGenerator
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new()
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
@@ -33,33 +34,30 @@ public sealed class ClaudeInsightGenerator : IInsightGenerator
     }
 
     public async Task<Result<ReportInsights>> GenerateAsync(
-        ReportMetrics metrics, string language, CancellationToken ct = default)
+        ReportMetrics metrics,
+        BusinessType businessType,
+        string language,
+        CancellationToken ct = default)
     {
         try
         {
-            var prompt = BuildPrompt(metrics, language);
-            var responseText = await CallClaudeApiAsync(prompt, ct);
+            var prompt = InsightPromptBuilder.Build(metrics, businessType, language);
+            var responseText = await CallClaudeAsync(prompt, ct);
             return ParseInsights(responseText);
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogWarning(ex, "Falha na chamada HTTP ao Claude");
-            return AppError.Failure("Claude.HttpError", ex.Message);
+            _logger.LogWarning(ex, "Falha HTTP ao chamar Claude — usando fallback");
+            return BuildFallbackInsights(metrics);
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning(ex, "Falha ao parsear resposta do Claude");
-            return AppError.Failure("Claude.ParseError", ex.Message);
+            _logger.LogWarning(ex, "Falha ao parsear resposta do Claude — usando fallback");
+            return BuildFallbackInsights(metrics);
         }
     }
 
-    private static string BuildPrompt(ReportMetrics metrics, string language) =>
-        $"Analise estas métricas semanais de negócio e forneça: 1) Um destaque positivo, " +
-        $"2) Um alerta/preocupação, 3) Uma dica de melhoria. " +
-        $"Receita: {metrics.Revenue}, Vendas: {metrics.SalesCount}, Visitas: {metrics.TotalVisits}. " +
-        $"Responda em {language} com formato JSON: {{\"highlight\":\"...\",\"alert\":\"...\",\"tip\":\"...\"}}";
-
-    private async Task<string> CallClaudeApiAsync(string prompt, CancellationToken ct)
+    private async Task<string> CallClaudeAsync(string prompt, CancellationToken ct)
     {
         var request = new
         {
@@ -67,13 +65,15 @@ public sealed class ClaudeInsightGenerator : IInsightGenerator
             max_tokens = _options.MaxTokens,
             messages = new[] { new { role = "user", content = prompt } },
         };
-        var response = await _httpClient.PostAsJsonAsync("/v1/messages", request, _jsonOptions, ct);
+
+        var response = await _httpClient.PostAsJsonAsync("/v1/messages", request, JsonOptions, ct);
         response.EnsureSuccessStatusCode();
+
         var body = await response.Content.ReadAsStringAsync(ct);
-        return ExtractTextFromResponse(body);
+        return ExtractText(body);
     }
 
-    private static string ExtractTextFromResponse(string body)
+    private static string ExtractText(string body)
     {
         using var doc = JsonDocument.Parse(body);
         return doc.RootElement
@@ -84,12 +84,48 @@ public sealed class ClaudeInsightGenerator : IInsightGenerator
 
     private Result<ReportInsights> ParseInsights(string json)
     {
-        using var doc = JsonDocument.Parse(json);
+        // Remove possível markdown code block que Claude às vezes adiciona
+        var clean = json.Trim();
+        if (clean.StartsWith("```", StringComparison.Ordinal))
+        {
+            var start = clean.IndexOf('{', StringComparison.Ordinal);
+            var end = clean.LastIndexOf('}');
+            if (start >= 0 && end > start)
+            {
+                clean = clean[start..(end + 1)];
+            }
+        }
+
+        using var doc = JsonDocument.Parse(clean);
         var root = doc.RootElement;
+
         return new ReportInsights(
             highlight: root.GetProperty("highlight").GetString() ?? string.Empty,
             alert: root.GetProperty("alert").GetString() ?? string.Empty,
             tip: root.GetProperty("tip").GetString() ?? string.Empty,
+            generatedAt: _dateTime.UtcNow);
+    }
+
+    private Result<ReportInsights> BuildFallbackInsights(ReportMetrics metrics)
+    {
+        _logger.LogInformation("Gerando insights de fallback baseados nas métricas");
+
+        var highlight = metrics.SalesCount > 0
+            ? $"Você realizou {metrics.SalesCount} vendas com receita de R$ {metrics.Revenue.Amount:N2} nesta semana."
+            : "Seus dados foram coletados com sucesso. Aguarde a próxima semana para comparações.";
+
+        var alert = metrics.PreviousRevenue is not null && metrics.Revenue.Amount < metrics.PreviousRevenue.Amount
+            ? "A receita desta semana foi inferior à semana anterior. Analise os fatores que podem ter impactado as vendas."
+            : "Monitore a taxa de conversão de visitas em vendas para identificar oportunidades de melhoria.";
+
+        var tip = metrics.TotalVisits > 0 && metrics.SalesCount > 0
+            ? $"Sua taxa de conversão está em {(decimal)metrics.SalesCount / metrics.TotalVisits * 100:F1}%. Teste novas chamadas para ação nas páginas mais visitadas."
+            : "Conecte mais integrações para receber insights mais precisos e personalizados.";
+
+        return new ReportInsights(
+            highlight: highlight,
+            alert: alert,
+            tip: tip,
             generatedAt: _dateTime.UtcNow);
     }
 }
