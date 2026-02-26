@@ -14,6 +14,13 @@
 root = true
 
 # ─────────────────────────────────────────
+# CÓDIGO GERADO — sem analyzers
+# ─────────────────────────────────────────
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
+
+# ─────────────────────────────────────────
 # PADRÃO GERAL
 # ─────────────────────────────────────────
 [*]

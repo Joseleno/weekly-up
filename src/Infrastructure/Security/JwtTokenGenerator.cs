@@ -22,7 +22,7 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
     public string GenerateToken(User user)
     {
         var claims = BuildClaims(user);
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiry = DateTime.UtcNow.AddMinutes(_options.ExpirationMinutes);
 

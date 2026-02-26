@@ -271,6 +271,7 @@ public sealed class ArchitectureTests
                 && !t.IsAbstract
                 && t.Namespace is not null
                 && t.Namespace.StartsWith("WeeklyUp.Infrastructure", StringComparison.Ordinal)
+                && !t.Namespace.StartsWith("WeeklyUp.Infrastructure.Persistence.Migrations", StringComparison.Ordinal)
                 && !t.IsSealed)
             .Select(t => t.FullName)
             .ToList();

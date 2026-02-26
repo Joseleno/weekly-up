@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using WeeklyUp.Domain.Common;
 
 namespace WeeklyUp.Domain.ValueObjects;
@@ -7,12 +8,16 @@ public sealed class Demographics : ValueObject
     private const int MaxCities = 10;
     private const int MaxStates = 5;
 
-    public IReadOnlyDictionary<string, decimal> GenderDistribution { get; }
-    public IReadOnlyDictionary<string, decimal> AgeGroups { get; }
-    public IReadOnlyList<string> TopCities { get; }
-    public IReadOnlyList<string> TopStates { get; }
-    public IReadOnlyDictionary<string, decimal> Devices { get; }
-    public IReadOnlyDictionary<string, decimal> TrafficSources { get; }
+    public Dictionary<string, decimal> GenderDistribution { get; private set; } = [];
+    public Dictionary<string, decimal> AgeGroups { get; private set; } = [];
+    public Collection<string> TopCities { get; private set; } = [];
+    public Collection<string> TopStates { get; private set; } = [];
+    public Dictionary<string, decimal> Devices { get; private set; } = [];
+    public Dictionary<string, decimal> TrafficSources { get; private set; } = [];
+
+    // Construtor sem parâmetros exigido pelo System.Text.Json para deserialização
+    [System.Text.Json.Serialization.JsonConstructor]
+    public Demographics() { }
 
     public Demographics(
         IReadOnlyDictionary<string, decimal> genderDistribution,
@@ -39,12 +44,12 @@ public sealed class Demographics : ValueObject
             throw new ArgumentException($"TopStates nao pode ter mais de {MaxStates} entradas.", nameof(topStates));
         }
 
-        GenderDistribution = genderDistribution;
-        AgeGroups = ageGroups;
-        TopCities = topCities;
-        TopStates = topStates;
-        Devices = devices;
-        TrafficSources = trafficSources;
+        GenderDistribution = new Dictionary<string, decimal>(genderDistribution);
+        AgeGroups = new Dictionary<string, decimal>(ageGroups);
+        TopCities = new Collection<string>([.. topCities]);
+        TopStates = new Collection<string>([.. topStates]);
+        Devices = new Dictionary<string, decimal>(devices);
+        TrafficSources = new Dictionary<string, decimal>(trafficSources);
     }
 
     protected override IEnumerable<object?> GetEqualityComponents()

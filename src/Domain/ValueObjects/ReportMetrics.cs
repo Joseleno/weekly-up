@@ -4,17 +4,19 @@ namespace WeeklyUp.Domain.ValueObjects;
 
 public sealed class ReportMetrics : ValueObject
 {
-    public Money Revenue { get; }
-    public int SalesCount { get; }
-    public Money AverageTicket { get; }
-    public int NewCustomers { get; }
-    public int TotalVisits { get; }
-    public int UniqueVisitors { get; }
-    public int PageViews { get; }
-    public string? TopPage { get; }
-    public string? TopTrafficSource { get; }
-    public Money? PreviousRevenue { get; }
-    public int? PreviousVisits { get; }
+    public Money Revenue { get; private set; } = Money.Zero;
+    public int SalesCount { get; private set; }
+    public Money AverageTicket { get; private set; } = Money.Zero;
+    public int NewCustomers { get; private set; }
+    public int TotalVisits { get; private set; }
+    public int UniqueVisitors { get; private set; }
+    public int PageViews { get; private set; }
+    public string? TopPage { get; private set; }
+    public string? TopTrafficSource { get; private set; }
+    public Money? PreviousRevenue { get; private set; }
+    public int? PreviousVisits { get; private set; }
+
+    private ReportMetrics() { }
 
     public ReportMetrics(
         Money revenue,

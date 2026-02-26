@@ -1,6 +1,9 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WeeklyUp.Domain.Entities;
+using WeeklyUp.Domain.ValueObjects;
 
 namespace WeeklyUp.Infrastructure.Persistence.Configurations;
 
@@ -86,7 +89,14 @@ public sealed class ReportConfiguration : IEntityTypeConfiguration<Report>
 
     private static void ConfigureDemographics(EntityTypeBuilder<Report> builder)
     {
-        builder.OwnsOne(r => r.Demographics, d => d.ToJson("demographics"));
+        var converter = new ValueConverter<Demographics?, string?>(
+            v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+            v => v == null ? null : JsonSerializer.Deserialize<Demographics>(v, (JsonSerializerOptions?)null));
+
+        builder.Property(r => r.Demographics)
+            .HasColumnName("demographics")
+            .HasColumnType("jsonb")
+            .HasConversion(converter);
     }
 
     private static void ConfigureInsights(EntityTypeBuilder<Report> builder)

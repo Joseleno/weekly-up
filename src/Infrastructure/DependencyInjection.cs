@@ -3,6 +3,7 @@ using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Polly;
 using Refit;
 using StackExchange.Redis;
@@ -115,7 +116,7 @@ public static class InfrastructureServiceExtensions
         IConfiguration configuration)
     {
         services.Configure<ResendOptions>(configuration.GetSection("Resend"));
-        services.Configure<TwilioOptions>(configuration.GetSection("Twilio"));
+        services.Configure<EvolutionApiOptions>(configuration.GetSection("EvolutionApi"));
         services.Configure<ClaudeOptions>(configuration.GetSection("Claude"));
 
         services
@@ -131,7 +132,7 @@ public static class InfrastructureServiceExtensions
 
         services.AddTransient<ResendAuthHandler>();
         services.AddTransient<ClaudeAuthHandler>();
-        services.AddTransient<TwilioAuthHandler>();
+        services.AddTransient<EvolutionApiAuthHandler>();
 
         services.AddHttpClient("resend", c =>
             c.BaseAddress = new Uri("https://api.resend.com"))
@@ -149,9 +150,12 @@ public static class InfrastructureServiceExtensions
             .AddTransientHttpErrorPolicy(p =>
                 p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
-        services.AddHttpClient("twilio", c =>
-            c.BaseAddress = new Uri("https://api.twilio.com"))
-            .AddHttpMessageHandler<TwilioAuthHandler>()
+        services.AddHttpClient("evolutionapi", (sp, c) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<EvolutionApiOptions>>().Value;
+            c.BaseAddress = new Uri(opts.BaseUrl);
+        })
+            .AddHttpMessageHandler<EvolutionApiAuthHandler>()
             .AddTransientHttpErrorPolicy(p =>
                 p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
             .AddTransientHttpErrorPolicy(p =>
@@ -164,7 +168,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IDataAggregator, DataAggregator>();
         services.AddScoped<IInsightGenerator, ClaudeInsightGenerator>();
         services.AddScoped<IEmailSender, ResendEmailSender>();
-        services.AddScoped<IWhatsAppSender, TwilioWhatsAppSender>();
+        services.AddScoped<IWhatsAppSender, EvolutionApiWhatsAppSender>();
 
         return services;
     }
@@ -181,14 +185,14 @@ public static class InfrastructureServiceExtensions
             throw new InvalidOperationException("Claude:ApiKey nao configurada. Verifique appsettings ou variaveis de ambiente.");
         }
 
-        if (string.IsNullOrWhiteSpace(configuration["Twilio:AccountSid"]))
+        if (string.IsNullOrWhiteSpace(configuration["EvolutionApi:ApiKey"]))
         {
-            throw new InvalidOperationException("Twilio:AccountSid nao configurada. Verifique appsettings ou variaveis de ambiente.");
+            throw new InvalidOperationException("EvolutionApi:ApiKey nao configurada. Verifique appsettings ou variaveis de ambiente.");
         }
 
-        if (string.IsNullOrWhiteSpace(configuration["Twilio:AuthToken"]))
+        if (string.IsNullOrWhiteSpace(configuration["EvolutionApi:BaseUrl"]))
         {
-            throw new InvalidOperationException("Twilio:AuthToken nao configurada. Verifique appsettings ou variaveis de ambiente.");
+            throw new InvalidOperationException("EvolutionApi:BaseUrl nao configurada. Verifique appsettings ou variaveis de ambiente.");
         }
     }
 
