@@ -12,6 +12,11 @@ public sealed class PagedList<T>
 
     public PagedList(IReadOnlyList<T> items, int pageNumber, int pageSize, int totalCount)
     {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(pageSize, 0);
+        ArgumentOutOfRangeException.ThrowIfNegative(totalCount);
+
         Items = items;
         PageNumber = pageNumber;
         PageSize = pageSize;
