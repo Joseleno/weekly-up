@@ -1,19 +1,19 @@
 # 📊 WeeklyUp — 06. Cronograma e Checklist de Implementação
 
-> **Prazo:** 5 semanas (Backend + Web) + 3 semanas (Mobile)  
-> **Abordagem:** Backend-first → Frontend → Mobile
+> **Prazo:** 5 semanas (Backend) + 2 semanas (WebApp Blazor WASM)
+> **Abordagem:** Backend-first → WebApp Blazor (PWA substitui app mobile)
 
 ---
 
 ## Visão Geral das Fases
 
 ```
-Semana 1 ████████ Fundação + Domain Layer
-Semana 2 ████████ Integrações + Data Collection  
-Semana 3 ████████ Relatórios + IA + Email + WhatsApp
-Semana 4 ████████ API completa + Dashboard Web
-Semana 5 ████████ Polish + Testes + Deploy
-Semana 6-8 ██████ Mobile (.NET MAUI)
+Semana 1   ████████ Fundação + Domain Layer
+Semana 2   ████████ Integrações + Data Collection
+Semana 3   ████████ Relatórios + IA + Email + WhatsApp
+Semana 4   ████████ API completa + Finalização Backend
+Semana 5   ████████ Polish + Testes + Deploy Backend
+Semana 6-7 ████████ WebApp Blazor WASM (F0-F7) + PWA
 ```
 
 ---
@@ -196,54 +196,15 @@ Semana 6-8 ██████ Mobile (.NET MAUI)
 - [ ] OpenAPI 3.1 nativo + Scalar UI para documentação da API
 - [ ] Testes: todos os endpoints via WebApplicationFactory
 
-### Dia 2: Frontend — Setup + Landing Page
+### Dia 2-5: Finalização Backend
 
-- [ ] Setup Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui
-- [ ] Configurar API client (Axios ou fetch wrapper com JWT)
-- [ ] Implementar layout base (Header, Footer, MobileNav)
-- [ ] Landing page (hero, features, pricing, CTA)
-  - [ ] Seção "Como funciona" (3 passos)
-  - [ ] Seção "Exemplo do email" (mockup visual)
-  - [ ] Seção "Planos" (Free, Pro R$29, Business R$79)
-  - [ ] CTA "Comece grátis"
-- [ ] Deploy landing page (Vercel)
-
-### Dia 3: Frontend — Auth + Onboarding
-
-- [ ] Login page (email/senha + Google OAuth)
-- [ ] Register page
-- [ ] Fluxo de onboarding:
-  - [ ] Step 1: "Como se chama seu negócio?"
-  - [ ] Step 2: "Qual o tipo?" (selecionar BusinessType)
-  - [ ] Step 3: "Conecte suas fontes" (botões OAuth GA4 + Stripe + manual)
-  - [ ] Step 4: "Pronto! Relatório chega segunda às 7h"
-- [ ] Proteção de rotas (redirect se não logado)
-
-### Dia 4: Frontend — Dashboard
-
-- [ ] Dashboard layout (sidebar + content area)
-- [ ] `MetricCard` component (receita, vendas, tráfego com ↑↓%)
-- [ ] `RevenueChart` (Recharts — linha de tendência últimas 12 semanas)
-- [ ] `TrafficChart` (Recharts — barras)
-- [ ] `DemographicsPanel`:
-  - [ ] `GenderPieChart` (pizza feminino/masculino)
-  - [ ] `AgeBarChart` (barras horizontais por faixa etária)
-  - [ ] `LocationList` (top 5 cidades)
-  - [ ] `DeviceSplit` (mobile vs desktop)
-  - [ ] `TrafficSourceChart` (donut chart com fontes)
-- [ ] `InsightCard` (destaque, alerta, dica — com ícones e cores)
-- [ ] `WeekComparison` (side-by-side esta semana vs anterior)
-- [ ] Lock overlay para features Pro (blur + "Faça upgrade" CTA)
-
-### Dia 5: Frontend — Reports + Settings
-
-- [ ] Reports History page (timeline de relatórios passados)
-- [ ] Report Detail page (relatório completo de uma semana)
-- [ ] Demographics Detail page (detalhamento completo)
-- [ ] Integrations page (conectar/desconectar, status)
-- [ ] Settings page (preferências do relatório, dia/hora de envio)
-- [ ] Billing page (planos, upgrade, integração Stripe Checkout)
-- [ ] Responsividade mobile (testar todas as telas)
+- [ ] Implementar Health check endpoint
+- [ ] Implementar `WebhookEndpoints` (Stripe webhooks para pagamento)
+- [ ] Implementar rate limiting (60 req/min por IP)
+- [ ] Implementar request logging middleware
+- [ ] Implementar correlation ID middleware
+- [ ] OpenAPI 3.1 nativo + Scalar UI para documentação da API
+- [ ] Testes: todos os endpoints via WebApplicationFactory
 
 ---
 
@@ -273,7 +234,7 @@ Semana 6-8 ██████ Mobile (.NET MAUI)
 - [ ] Deploy API: Azure App Service ou Railway (Docker)
 - [ ] Deploy PostgreSQL: Supabase ou Neon (managed)
 - [ ] Deploy Redis: Upstash (serverless Redis)
-- [ ] Deploy Frontend: Vercel
+- [ ] Deploy WebApp: Azure Static Web Apps (Blazor WASM)
 - [ ] Configurar domínio + SSL (Let's Encrypt)
 - [ ] Configurar Sentry (error tracking)
 - [ ] Configurar Seq ou equivalente (logs)
@@ -286,43 +247,88 @@ Semana 6-8 ██████ Mobile (.NET MAUI)
 - [ ] Criar 3-5 contas de teste com dados reais
 - [ ] Trigger manual do job de relatório
 - [ ] Verificar email recebido (visual, dados corretos, links funcionam)
-- [ ] Verificar dashboard (métricas, gráficos, demographics)
+- [ ] Verificar dashboard no WebApp (métricas, gráficos, demographics)
 - [ ] Verificar WhatsApp (mensagem recebida, formatação)
 - [ ] Fix bugs encontrados
 - [ ] Convidar 5-10 beta users reais
 
 ---
 
-## Semanas 6-8 — Mobile (.NET MAUI)
+## Semanas 6-7 — WebApp Blazor WASM (F0-F7)
 
-### Semana 6: Setup + Telas Base
+### F0: Scaffolding do Projeto
 
-- [ ] Setup projeto .NET MAUI (Android + iOS)
-- [ ] Design system (cores, fontes, espaçamentos)
-- [ ] Implementar `ApiService` (Refit — mesma API do backend)
-- [ ] Implementar `AuthService` (JWT storage via SecureStorage)
-- [ ] Telas: LoginPage, RegisterPage
-- [ ] Shell navigation (tabs: Dashboard, Reports, Settings)
+- [ ] Criar projeto `WeeklyUp.WebApp` (Blazor WebAssembly Standalone, PWA)
+- [ ] Instalar MudBlazor 8.x, Blazored.LocalStorage, BlazorApexCharts
+- [ ] Configurar `MudThemeProvider` (tema WeeklyUp — cores, tipografia)
+- [ ] Configurar `HttpClient` base com `BaseAddress` apontando para a API
+- [ ] Criar `JwtAuthenticationStateProvider` (custom `AuthenticationStateProvider`)
+- [ ] Criar `JwtDelegatingHandler` (injeta `Authorization: Bearer` no `HttpClient`)
+- [ ] Registrar serviços no `Program.cs`
+- [ ] Criar projeto `WeeklyUp.WebApp.Tests` (bUnit)
 
-### Semana 7: Dashboard + Reports
+### F1: Auth (Login + Register)
 
-- [ ] DashboardPage (métricas, mini-charts com LiveChartsCore)
-- [ ] DemographicsPage (gráficos de gênero, idade, localidade)
-- [ ] ReportDetailPage (relatório completo)
-- [ ] ReportsListPage (histórico)
-- [ ] Pull-to-refresh em todas as telas
-- [ ] Loading states + empty states
+- [ ] `LoginPage.razor` — email/senha + botão Google OAuth
+- [ ] `RegisterPage.razor` — cadastro com validação client-side
+- [ ] `ApiAuthService` — chamadas POST `/api/auth/login`, `/api/auth/register`
+- [ ] Persistir JWT no localStorage via `Blazored.LocalStorage`
+- [ ] Redirect automático para `/login` se não autenticado (`AuthorizeRouteView`)
+- [ ] Testes bUnit: componentes de auth
 
-### Semana 8: Polish + Publish
+### F2: Layout + Navegação
 
-- [ ] IntegrationsPage (status das integrações)
-- [ ] SettingsPage (preferências, plano, conta)
-- [ ] Push notifications via Firebase (quando relatório é gerado)
-- [ ] Testar em Android (emulador + device real)
-- [ ] Testar em iOS (simulador)
-- [ ] Preparar assets (ícone, splash, screenshots)
-- [ ] Publicar na Google Play Store
-- [ ] Publicar na Apple App Store
+- [ ] `MainLayout.razor` — sidebar (MudNavMenu) + top bar (MudAppBar)
+- [ ] Navegação: Dashboard, Relatórios, Integrações, Configurações, Billing
+- [ ] Responsividade mobile (MudDrawer com breakpoint)
+- [ ] `UserMenu` — nome + avatar + logout
+- [ ] Loading state global (`MudProgressLinear`)
+
+### F3: Dashboard
+
+- [ ] `DashboardPage.razor` — grid de métricas + gráficos
+- [ ] `MetricCard` component (MudPaper + ícone + valor + ↑↓%)
+- [ ] `RevenueChart` (ApexChart — linha de tendência últimas 12 semanas)
+- [ ] `TrafficChart` (ApexChart — barras)
+- [ ] `InsightCard` (destaque, alerta, dica — com ícones MudIcon e cores)
+- [ ] Lock overlay para features Pro (blur + "Faça upgrade" CTA)
+- [ ] Testes bUnit: MetricCard, InsightCard
+
+### F4: Demographics + Gráficos
+
+- [ ] `DemographicsPanel` component:
+  - [ ] `GenderPieChart` (ApexChart — pizza feminino/masculino)
+  - [ ] `AgeBarChart` (ApexChart — barras horizontais por faixa etária)
+  - [ ] `LocationList` (MudSimpleTable — top 5 cidades)
+  - [ ] `DeviceSplit` (ApexChart — donut mobile vs desktop)
+  - [ ] `TrafficSourceChart` (ApexChart — donut com fontes)
+- [ ] `WeekComparison` (side-by-side esta semana vs anterior)
+- [ ] Verificação de plano (Pro+ para demographics)
+
+### F5: Relatórios + Integrações
+
+- [ ] `ReportHistoryPage.razor` — timeline de relatórios passados (MudTimeline)
+- [ ] `ReportDetailPage.razor` — relatório completo de uma semana
+- [ ] `IntegrationsPage.razor` — conectar/desconectar, status (MudCard por integração)
+- [ ] `ManualMetricForm` — formulário para entrada manual (MudForm + validação)
+- [ ] Testes bUnit: ReportHistory, IntegrationsPage
+
+### F6: Settings + Billing
+
+- [ ] `SettingsPage.razor` — preferências do relatório (dia/hora de envio)
+- [ ] `ProfilePage.razor` — editar perfil (nome, negócio, tipo)
+- [ ] `BillingPage.razor` — planos (Free/Pro/Business), upgrade via Stripe Checkout
+- [ ] Redirect para Stripe Checkout Session URL
+- [ ] Redirect para Stripe Billing Portal
+
+### F7: PWA + Polish + Deploy
+
+- [ ] Configurar `manifest.json` (nome, ícones, cores, start_url)
+- [ ] Configurar `service-worker.js` (cache offline básico)
+- [ ] Testar instalação PWA no Chrome + mobile
+- [ ] Responsividade: testar todas as telas em mobile/tablet/desktop
+- [ ] Deploy para Azure Static Web Apps (ou similar hosting estático)
+- [ ] Configurar CORS na API para aceitar domínio do WebApp
 
 ---
 

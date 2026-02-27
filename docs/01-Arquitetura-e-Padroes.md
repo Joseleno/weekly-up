@@ -1,6 +1,6 @@
 # 📊 WeeklyUp — 01. Arquitetura e Padrões de Qualidade
 
-> **Stack:** C# 14 / ASP.NET Core 10 — Minimal APIs (Backend) + Next.js 14 (Frontend Web) + .NET MAUI 10 (Mobile)  
+> **Stack:** C# 14 / ASP.NET Core 10 — Minimal APIs (Backend) + Blazor WebAssembly Standalone (Frontend/PWA)
 > **Padrões:** Clean Architecture · SOLID · Clean Code · CQRS · DDD Tactical Patterns
 
 ---
@@ -120,35 +120,24 @@ Endpoints:      PascalCase          → ReportEndpoints.cs
 | **PostgreSQL 17** | Banco principal | Open source, JSONB nativo, performance |
 | **Redis 7** | Cache, sessões, rate limit state | In-memory, alta performance, pub/sub |
 
-### 2.3 Frontend Web (Next.js)
+### 2.3 Presentation Layer — WebApp (Blazor WebAssembly Standalone + PWA)
 
 | Tecnologia | Versão | Uso |
 |-----------|--------|-----|
-| **Next.js** | 14.x (App Router) | Framework React com SSR/SSG |
-| **React** | 18.x | UI library |
-| **TypeScript** | 5.x | Type safety obrigatório |
-| **Tailwind CSS** | 3.x | Utility-first CSS |
-| **shadcn/ui** | Latest | Componentes acessíveis (Radix primitives) |
-| **Recharts** | 2.x | Gráficos do dashboard |
-| **TanStack Query** | 5.x | Server state management + cache |
-| **Zustand** | 4.x | Client state management (leve) |
-| **React Hook Form** | 7.x | Formulários performáticos |
-| **Zod** | 3.x | Schema validation (compartilha com API types) |
-| **next-auth** | 5.x | Autenticação (sincroniza com backend JWT) |
+| **Blazor WebAssembly Standalone** | .NET 10 | SPA 100% client-side, sem servidor .NET — hospedado como site estático |
+| **MudBlazor** | 8.x | Material Design component library — 80+ componentes, responsivo, tema customizável |
+| **BlazorApexCharts** | 3.x | Gráficos interativos para dashboard (linha, barra, donut, pizza) |
+| **Blazored.LocalStorage** | 4.x | Persistência de JWT no localStorage |
+| **PWA (Progressive Web App)** | Nativo | Instalável no celular via "Adicionar à tela inicial" — substitui app nativo |
+| **HttpClient + System.Net.Http.Json** | Nativo | Consumo da API via JSON — zero dependência do backend |
 
-### 2.4 Mobile (.NET MAUI 10)
+**Regras da WebApp:**
+- WebApp **NÃO referencia** nenhum projeto backend (sem `ProjectReference` para Domain/Application/Infrastructure)
+- Consome a API exclusivamente via `HttpClient` + JSON
+- Autenticação via `JwtAuthenticationStateProvider` (custom `AuthenticationStateProvider`) + `JwtDelegatingHandler` (injeta `Authorization: Bearer` header)
+- Estado de auth persistido no `localStorage` via `Blazored.LocalStorage`
 
-| Tecnologia | Uso |
-|-----------|-----|
-| **.NET MAUI 10** | Framework cross-platform (Android + iOS) — com XAML compilado e global namespaces |
-| **CommunityToolkit.MAUI** | Componentes extras, behaviors |
-| **CommunityToolkit.Mvvm** | MVVM com source generators |
-| **Refit** | HTTP client tipado (mesma API) |
-| **SkiaSharp / LiveChartsCore** | Gráficos nativos no dashboard |
-| **Plugin.Firebase.CloudMessaging** | Push notifications |
-| **SecureStorage** | Armazenamento seguro de JWT |
-
-### 2.5 Infraestrutura / DevOps
+### 2.4 Infraestrutura / DevOps
 
 | Tecnologia | Uso |
 |-----------|-----|
@@ -361,19 +350,27 @@ WeeklyUp/
 │   │   ├── Dockerfile
 │   │   └── Program.cs
 │   │
-│   └── WeeklyUp.Shared/                        # ⚪ CROSS-CUTTING (constantes, extensions)
-│       ├── Constants/ (CacheKeys, Roles, Limits)
-│       └── Extensions/ (String, DateTime, Enumerable)
+│   ├── WeeklyUp.Shared/                        # ⚪ CROSS-CUTTING (constantes, extensions)
+│   │   ├── Constants/ (CacheKeys, Roles, Limits)
+│   │   └── Extensions/ (String, DateTime, Enumerable)
+│   │
+│   └── WeeklyUp.WebApp/                        # 🟣 PRESENTATION WEB (Blazor WASM + PWA)
+│       ├── Auth/                                # JwtAuthenticationStateProvider, JwtDelegatingHandler
+│       ├── Components/                          # Componentes reutilizáveis (MetricCard, ChartPanel, etc.)
+│       ├── Layout/                              # MainLayout.razor, NavMenu.razor
+│       ├── Pages/                               # Páginas (Dashboard, Reports, Settings, etc.)
+│       ├── Services/                            # ApiClient, LocalStorageService wrappers
+│       ├── wwwroot/                             # Arquivos estáticos, manifest PWA
+│       └── Program.cs
 │
 ├── tests/
 │   ├── WeeklyUp.Domain.Tests/                   # Unit tests — 100% coverage
 │   ├── WeeklyUp.Application.Tests/              # Unit tests — >80% coverage
 │   ├── WeeklyUp.Infrastructure.Tests/           # Integration tests
 │   ├── WeeklyUp.Api.Tests/                      # API integration tests
-│   └── WeeklyUp.Architecture.Tests/             # NetArchTest enforcement
+│   ├── WeeklyUp.Architecture.Tests/             # NetArchTest enforcement
+│   └── WeeklyUp.WebApp.Tests/                   # bUnit component tests
 │
-├── frontend/                                     # Next.js 14 Web App
-├── mobile/                                       # .NET MAUI 10 App
 ├── docker/
 │   ├── docker-compose.yml
 │   └── docker-compose.override.yml

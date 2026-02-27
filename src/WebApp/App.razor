@@ -1,0 +1,48 @@
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<CascadingAuthenticationState>
+    <CascadingValue Value="(Action<bool>)SetDarkMode">
+        <Router AppAssembly="typeof(App).Assembly">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
+                    <NotAuthorized>
+                        <RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="routeData" Selector="h1" />
+            </Found>
+            <NotFound>
+                <PageTitle>Not Found</PageTitle>
+                <LayoutView Layout="typeof(MainLayout)">
+                    <MudText Typo="Typo.h4" Class="mt-8" Align="Align.Center">
+                        Página não encontrada
+                    </MudText>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </CascadingValue>
+</CascadingAuthenticationState>
+
+@code {
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#1E88E5",
+            Secondary = "#FF6F00",
+            AppbarBackground = "#1E88E5",
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#42A5F5",
+            Secondary = "#FFB74D",
+        },
+    };
+
+    private bool _isDarkMode;
+
+    private void SetDarkMode(bool isDark) => _isDarkMode = isDark;
+}

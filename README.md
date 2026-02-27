@@ -35,17 +35,13 @@ Um email semanal bonito e acionável que entrega:
 | MediatR (CQRS) | 12.x |
 | Hangfire (Background Jobs) | 1.8.x |
 
-### Frontend Web
+### Frontend (PWA)
 | Tecnologia | Versão |
 |-----------|--------|
-| Next.js (App Router) | 14.x |
-| React + TypeScript | 18.x / 5.x |
-| Tailwind CSS + shadcn/ui | 3.x |
-
-### Mobile
-| Tecnologia | Versão |
-|-----------|--------|
-| .NET MAUI 10 | 10.x |
+| Blazor WebAssembly Standalone | .NET 10 |
+| MudBlazor | 8.x |
+| BlazorApexCharts | 3.x |
+| Blazored.LocalStorage | 4.x |
 
 ### Infraestrutura
 Docker · GitHub Actions · Nginx · Resend (email) · Twilio (WhatsApp) · Sentry · Seq
@@ -79,15 +75,15 @@ weeklyup/
 │   ├── WeeklyUp.Application/         # Commands, Queries, Handlers (CQRS)
 │   ├── WeeklyUp.Infrastructure/      # EF Core, Providers, Email, AI, Jobs
 │   ├── WeeklyUp.Api/                 # Minimal API Endpoints (Carter)
-│   └── WeeklyUp.Shared/              # Constants, Extensions
+│   ├── WeeklyUp.Shared/              # Constants, Extensions
+│   └── WeeklyUp.WebApp/             # Blazor WASM + MudBlazor (PWA)
 ├── tests/
 │   ├── WeeklyUp.Domain.Tests/        # 100% coverage
 │   ├── WeeklyUp.Application.Tests/   # >80% coverage
 │   ├── WeeklyUp.Infrastructure.Tests/
 │   ├── WeeklyUp.Api.Tests/
-│   └── WeeklyUp.Architecture.Tests/  # NetArchTest rules
-├── frontend/                          # Next.js 14
-├── mobile/                            # .NET MAUI 10
+│   ├── WeeklyUp.Architecture.Tests/  # NetArchTest rules
+│   └── WeeklyUp.WebApp.Tests/       # bUnit component tests
 ├── docker/                            # docker-compose.yml
 └── docs/                              # Architecture Decision Records
 ```
@@ -114,7 +110,6 @@ weeklyup/
 ## Requisitos
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- [Node.js 20+](https://nodejs.org/)
 - [Docker](https://www.docker.com/)
 
 ## Rodando Local
@@ -127,8 +122,8 @@ docker compose -f docker/docker-compose.yml up -d
 dotnet restore
 dotnet run --project src/WeeklyUp.Api
 
-# Frontend
-cd frontend && npm install && npm run dev
+# WebApp (Blazor WASM)
+dotnet run --project src/WeeklyUp.WebApp
 ```
 
 ## Testes
@@ -154,6 +149,7 @@ dotnet test --collect:"XPlat Code Coverage"
 | `docs/04-Infrastructure-Layer.md` | EF Core, providers, email, WhatsApp, jobs |
 | `docs/05-API-Tests-DevOps.md` | Endpoints, testes, Docker, CI/CD |
 | `docs/06-Cronograma-Checklist.md` | Roadmap dia-a-dia, checklist de qualidade |
+| `docs/07-Plano-de-Implementacao.md` | Plano detalhado Backend (Fases 0-6) + WebApp Blazor (Fases F0-F7) |
 
 ---
 

@@ -39,6 +39,13 @@ namespace WeeklyUp.Infrastructure;
 
 public static class InfrastructureServiceExtensions
 {
+    private static class ExternalApiBaseUrls
+    {
+        public const string GoogleAnalytics = "https://analyticsdata.googleapis.com";
+        public const string Resend = "https://api.resend.com";
+        public const string Claude = "https://api.anthropic.com";
+    }
+
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -58,7 +65,7 @@ public static class InfrastructureServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var databaseConnectionString = configuration.GetConnectionString("Database");
+        string? databaseConnectionString = configuration.GetConnectionString("Database");
         if (string.IsNullOrWhiteSpace(databaseConnectionString))
         {
             throw new InvalidOperationException("ConnectionStrings:Database nao configurada. Verifique appsettings ou variaveis de ambiente.");
@@ -91,7 +98,7 @@ public static class InfrastructureServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var redisConnectionString = configuration.GetConnectionString("Redis");
+        string? redisConnectionString = configuration.GetConnectionString("Redis");
         if (string.IsNullOrWhiteSpace(redisConnectionString))
         {
             throw new InvalidOperationException("ConnectionStrings:Redis nao configurada. Verifique appsettings ou variaveis de ambiente.");
@@ -134,7 +141,7 @@ public static class InfrastructureServiceExtensions
         services
             .AddRefitClient<IGoogleAnalyticsClient>()
             .ConfigureHttpClient(c =>
-                c.BaseAddress = new Uri("https://analyticsdata.googleapis.com"))
+                c.BaseAddress = new Uri(ExternalApiBaseUrls.GoogleAnalytics))
             .AddTransientHttpErrorPolicy(p =>
                 p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
             .AddTransientHttpErrorPolicy(p =>
@@ -147,7 +154,7 @@ public static class InfrastructureServiceExtensions
         services.AddTransient<EvolutionApiAuthHandler>();
 
         services.AddHttpClient("resend", c =>
-            c.BaseAddress = new Uri("https://api.resend.com"))
+            c.BaseAddress = new Uri(ExternalApiBaseUrls.Resend))
             .AddHttpMessageHandler<ResendAuthHandler>()
             .AddTransientHttpErrorPolicy(p =>
                 p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
@@ -155,7 +162,7 @@ public static class InfrastructureServiceExtensions
                 p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
         services.AddHttpClient("claude", c =>
-            c.BaseAddress = new Uri("https://api.anthropic.com"))
+            c.BaseAddress = new Uri(ExternalApiBaseUrls.Claude))
             .AddHttpMessageHandler<ClaudeAuthHandler>()
             .AddTransientHttpErrorPolicy(p =>
                 p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
@@ -164,7 +171,7 @@ public static class InfrastructureServiceExtensions
 
         services.AddHttpClient("evolutionapi", (sp, c) =>
         {
-            var opts = sp.GetRequiredService<IOptions<EvolutionApiOptions>>().Value;
+            EvolutionApiOptions opts = sp.GetRequiredService<IOptions<EvolutionApiOptions>>().Value;
             c.BaseAddress = new Uri(opts.BaseUrl);
         })
             .AddHttpMessageHandler<EvolutionApiAuthHandler>()

@@ -666,6 +666,16 @@ services:
     environment: { ACCEPT_EULA: "Y" }
     ports: ["5341:80"]
 
+  # (Opcional) WebApp Blazor WASM — servido como site estático via Nginx
+  # Em desenvolvimento, usar `dotnet run --project src/WeeklyUp.WebApp` diretamente.
+  # Em produção, deploy para Azure Static Web Apps ou similar (não precisa de container).
+  # webapp:
+  #   build:
+  #     context: ../
+  #     dockerfile: src/WeeklyUp.WebApp/Dockerfile
+  #   ports: ["8080:80"]
+  #   depends_on: [api]
+
 volumes:
   postgres_data:
 ```
@@ -738,6 +748,28 @@ jobs:
 
       - name: API Tests
         run: dotnet test tests/WeeklyUp.Api.Tests/ --no-build -c Release
+
+  build-webapp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+
+      - name: Restore WebApp
+        run: dotnet restore src/WeeklyUp.WebApp/
+
+      - name: Build WebApp
+        run: dotnet build src/WeeklyUp.WebApp/ --no-restore -c Release
+
+      - name: Publish WebApp (static files)
+        run: dotnet publish src/WeeklyUp.WebApp/ -c Release -o ./webapp-publish
+
+      - name: Upload WebApp artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          path: ./webapp-publish/wwwroot
 ```
 
 ---

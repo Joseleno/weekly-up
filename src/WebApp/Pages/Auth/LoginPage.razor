@@ -1,0 +1,126 @@
+@page "/login"
+@layout EmptyLayout
+@attribute [AllowAnonymous]
+
+@inject IApiClient ApiClient
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Entrar — WeeklyUp</PageTitle>
+
+<MudPaper Class="pa-8 ma-auto" MaxWidth="400px" Elevation="3">
+    <MudStack Spacing="4">
+        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary">
+                <b>WeeklyUp</b>
+            </MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+                Seu negócio em 2 minutos toda segunda-feira
+            </MudText>
+        </MudStack>
+
+        <MudDivider />
+
+        <EditForm Model="_model" OnValidSubmit="HandleLoginAsync">
+            <DataAnnotationsValidator />
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="_model.Email"
+                              Label="E-mail"
+                              Variant="Variant.Outlined"
+                              InputType="InputType.Email"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Email"
+                              Disabled="_loading"
+                              Required="true" />
+
+                <MudTextField @bind-Value="_model.Password"
+                              Label="Senha"
+                              Variant="Variant.Outlined"
+                              InputType="_showPassword ? InputType.Text : InputType.Password"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                              OnAdornmentClick="() => _showPassword = !_showPassword"
+                              Disabled="_loading"
+                              Required="true" />
+
+                @if (_errorMessage is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+                }
+
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Size="Size.Large"
+                           Disabled="_loading">
+                    @if (_loading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Entrando...</span>
+                    }
+                    else
+                    {
+                        <span>Entrar</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </EditForm>
+
+        <MudDivider />
+
+        <MudText Typo="Typo.body2" Align="Align.Center">
+            Não tem conta?
+            <MudLink Href="/register">Criar conta grátis</MudLink>
+        </MudText>
+    </MudStack>
+</MudPaper>
+
+@code {
+    private sealed class LoginFormModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private readonly LoginFormModel _model = new();
+    private bool _loading;
+    private bool _showPassword;
+    private string? _errorMessage;
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    private string? ReturnUrl { get; set; }
+
+    private async Task HandleLoginAsync()
+    {
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var response = await ApiClient.LoginAsync(new LoginRequest(_model.Email, _model.Password));
+
+            if (response is null)
+            {
+                _errorMessage = "Resposta inválida do servidor.";
+                return;
+            }
+
+            await AuthService.SetTokenAsync(response.Token, response.ExpiresAt);
+            Navigation.NavigateTo(ReturnUrl ?? "/");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            _errorMessage = "E-mail ou senha incorretos.";
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}
