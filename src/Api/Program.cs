@@ -34,10 +34,8 @@ builder.Host.UseSerilog((ctx, cfg) =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddMediator(options =>
-{
-    options.ServiceLifetime = ServiceLifetime.Scoped;
-});
+builder.Services.AddMediator(static options =>
+    options.ServiceLifetime = ServiceLifetime.Scoped);
 
 // Register Mediator pipeline behaviors (order matters: Logging → Validation → Transaction)
 builder.Services.AddScoped(
@@ -57,6 +55,8 @@ builder.Services.AddCarter(configurator: c =>
     c.WithModule<WeeklyUp.Api.Modules.IntegrationsModule>();
     c.WithModule<WeeklyUp.Api.Modules.MetricsModule>();
     c.WithModule<WeeklyUp.Api.Modules.ReportsModule>();
+    c.WithModule<WeeklyUp.Api.Modules.BillingModule>();
+    c.WithModule<WeeklyUp.Api.Modules.WebhooksModule>();
 });
 
 builder.Services.AddOpenApi();
@@ -79,13 +79,11 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(Policies.ProPlan, policy =>
-        policy.RequireClaim(CustomClaimTypes.Plan, "Pro", "Business"));
-    options.AddPolicy(Policies.BusinessPlan, policy =>
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(Policies.ProPlan, policy =>
+        policy.RequireClaim(CustomClaimTypes.Plan, "Pro", "Business"))
+    .AddPolicy(Policies.BusinessPlan, policy =>
         policy.RequireClaim(CustomClaimTypes.Plan, "Business"));
-});
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -109,7 +107,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            var allowedOrigins = builder.Configuration
+            string[] allowedOrigins = builder.Configuration
                 .GetSection("Cors:AllowedOrigins")
                 .Get<string[]>() ?? [];
             policy.WithOrigins(allowedOrigins)
@@ -123,8 +121,8 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddPolicy("api", context =>
     {
-        var userId = context.User.FindFirst(CustomClaimTypes.UserId)?.Value;
-        var partitionKey = userId ?? context.Connection.RemoteIpAddress?.ToString() ?? "anon";
+        string? userId = context.User.FindFirst(CustomClaimTypes.UserId)?.Value;
+        string partitionKey = userId ?? context.Connection.RemoteIpAddress?.ToString() ?? "anon";
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 60,
@@ -133,6 +131,15 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0,
         });
     });
+
+    options.AddPolicy("webhook", _ =>
+        RateLimitPartition.GetFixedWindowLimiter("stripe-webhook", _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 300,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0,
+        }));
 });
 
 WebApplication app = builder.Build();
@@ -160,7 +167,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Recurring jobs — toda segunda-feira às 7h (horário de Brasília) e token refresh a cada 6h
-var recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
+IRecurringJobManager recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
 var brasiliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
 recurringJobs.AddOrUpdate<WeeklyReportGenerationJob>(
     recurringJobId: "weekly-report-generation",
@@ -198,4 +205,8 @@ finally
 }
 
 // Required for WebApplicationFactory in E2E tests
-public partial class Program { }
+public partial class Program
+{
+    protected Program()
+    { }
+}

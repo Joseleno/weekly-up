@@ -77,10 +77,20 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(64)
             .IsRequired(false);
 
+        builder.Property(u => u.StripeCustomerId)
+            .HasColumnName("stripe_customer_id")
+            .HasMaxLength(255)
+            .IsRequired(false);
+
         builder.HasIndex(u => u.ExternalAuthId)
             .HasDatabaseName("ix_users_external_auth_id")
             .IsUnique()
             .HasFilter("external_auth_id IS NOT NULL");
+
+        builder.HasIndex(u => u.StripeCustomerId)
+            .HasDatabaseName("ix_users_stripe_customer_id")
+            .IsUnique()
+            .HasFilter("stripe_customer_id IS NOT NULL");
 
         builder.Ignore(u => u.DomainEvents);
 

@@ -21,6 +21,7 @@ public sealed class User : AggregateRoot
     public string Timezone { get; private set; } = DefaultTimezone;
     public PlanType Plan { get; private set; }
     public string? ExternalAuthId { get; private set; }
+    public string? StripeCustomerId { get; private set; }
     public string? PhoneNumber { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsEmailVerified { get; private set; }
@@ -136,6 +137,18 @@ public sealed class User : AggregateRoot
         return true;
     }
 
+    public void SetPlanFromWebhook(PlanType newPlan)
+    {
+        if (Plan == newPlan)
+        {
+            return;
+        }
+        PlanType previousPlan = Plan;
+        Plan = newPlan;
+        UpdatedAt = DateTime.UtcNow;
+        RaiseDomainEvent(new UserPlanChangedEvent(Id, previousPlan, newPlan));
+    }
+
     public void SetVerificationToken(string token)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(token);
@@ -180,6 +193,13 @@ public sealed class User : AggregateRoot
         BusinessType = businessType;
         UpdatedAt = DateTime.UtcNow;
         return true;
+    }
+
+    public void SetStripeCustomerId(string customerId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(customerId);
+        StripeCustomerId = customerId;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void SetPhoneNumber(string? phoneNumber)

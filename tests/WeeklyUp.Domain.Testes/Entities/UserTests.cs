@@ -241,6 +241,42 @@ public sealed class UserTests
         result.IsFailure.Should().BeTrue();
     }
 
+    // ── SetPlanFromWebhook ──────────────────────────────────
+
+    [Fact]
+    public void SetPlanFromWebhook_WhenPlanAlreadySame_DoesNotRaiseEvent()
+    {
+        // Arrange
+        var user = User.Create("a@b.com", "N", "Loja", BusinessType.Ecommerce).Value;
+        user.SetPlanFromWebhook(PlanType.Pro);
+        user.ClearDomainEvents();
+
+        // Act
+        user.SetPlanFromWebhook(PlanType.Pro); // mesmo plano
+
+        // Assert
+        user.DomainEvents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void SetPlanFromWebhook_WhenDowngradeToFree_EmitsUserPlanChangedEvent()
+    {
+        // Arrange
+        var user = User.Create("a@b.com", "N", "Loja", BusinessType.Ecommerce).Value;
+        user.SetPlanFromWebhook(PlanType.Pro);
+        user.ClearDomainEvents();
+
+        // Act
+        user.SetPlanFromWebhook(PlanType.Free);
+
+        // Assert
+        user.DomainEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<UserPlanChangedEvent>();
+        var ev = (UserPlanChangedEvent)user.DomainEvents.First();
+        ev.PreviousPlan.Should().Be(PlanType.Pro);
+        ev.NewPlan.Should().Be(PlanType.Free);
+    }
+
     // ── VerifyEmail ─────────────────────────────────────────
 
     [Fact]

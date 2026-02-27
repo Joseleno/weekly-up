@@ -15,11 +15,13 @@ using StackExchange.Redis;
 using Stripe;
 
 using WeeklyUp.Application.Common.Interfaces;
+using WeeklyUp.Application.Common.Settings;
 using WeeklyUp.Domain.Interfaces;
 using WeeklyUp.Domain.Interfaces.Repositories;
 using WeeklyUp.Domain.Interfaces.Services;
 using WeeklyUp.Infrastructure.AI;
 using WeeklyUp.Infrastructure.BackgroundJobs;
+using WeeklyUp.Infrastructure.Billing;
 using WeeklyUp.Infrastructure.Caching;
 using WeeklyUp.Infrastructure.DataSources;
 using WeeklyUp.Infrastructure.DataSources.GoogleAnalytics;
@@ -46,6 +48,7 @@ public static class InfrastructureServiceExtensions
             .AddCaching(configuration)
             .AddSecurity(configuration)
             .AddExternalServices(configuration)
+            .AddBilling(configuration)
             .AddBackgroundJobs(configuration);
 
         return services;
@@ -167,7 +170,6 @@ public static class InfrastructureServiceExtensions
             .AddTransientHttpErrorPolicy(p =>
                 p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
-        services.AddScoped<ChargeService>();
         services.AddScoped<IDataSourceProvider, GoogleAnalyticsProvider>();
         services.AddScoped<IDataSourceProvider, StripeDataProvider>();
         services.AddScoped<IDataSourceProvider, ManualDataProvider>();
@@ -200,6 +202,30 @@ public static class InfrastructureServiceExtensions
         {
             throw new InvalidOperationException("EvolutionApi:BaseUrl nao configurada. Verifique appsettings ou variaveis de ambiente.");
         }
+
+        if (string.IsNullOrWhiteSpace(configuration["Stripe:SecretKey"]))
+        {
+            throw new InvalidOperationException("Stripe:SecretKey nao configurada. Verifique appsettings ou variaveis de ambiente.");
+        }
+    }
+
+    private static IServiceCollection AddBilling(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<StripeOptions>(configuration.GetSection("Stripe"));
+        services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
+
+        // Stripe.NET usa configuração global de ApiKey. Para multi-tenant, passar RequestOptions por chamada.
+        // Este projeto é single-tenant SaaS — configuração global é adequada.
+        StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"] ?? string.Empty;
+
+        services.AddScoped<CustomerService>();
+        services.AddScoped<Stripe.Checkout.SessionService>();
+        services.AddScoped<Stripe.BillingPortal.SessionService>();
+        services.AddScoped<IStripeService, StripeService>();
+        services.AddScoped<ChargeService>();
+        return services;
     }
 
     private static IServiceCollection AddBackgroundJobs(

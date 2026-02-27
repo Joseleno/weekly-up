@@ -12,6 +12,7 @@ using NSubstitute;
 using StackExchange.Redis;
 
 using WeeklyUp.Application.Common.Interfaces;
+using WeeklyUp.Infrastructure.Billing;
 using WeeklyUp.Infrastructure.Persistence;
 
 namespace WeeklyUp.Api.Tests.Infrastructure;
@@ -45,6 +46,10 @@ public sealed class WeeklyUpWebAppFactory : WebApplicationFactory<Program>
             // Substitui o scheduler de jobs por mock — evita que Hangfire dispare jobs externos nos E2E
             services.RemoveAll<IReportJobScheduler>();
             services.AddScoped(_ => Substitute.For<IReportJobScheduler>());
+
+            // Substitui IStripeService por mock — evita chamadas reais ao Stripe nos E2E
+            services.RemoveAll<IStripeService>();
+            services.AddScoped(_ => Substitute.For<IStripeService>());
         });
 
         builder.ConfigureAppConfiguration((_, config) =>
@@ -63,6 +68,10 @@ public sealed class WeeklyUpWebAppFactory : WebApplicationFactory<Program>
                 ["EvolutionApi:BaseUrl"] = "http://localhost:8080",
                 ["EvolutionApi:ApiKey"] = "weeklyup-evolution-key",
                 ["EvolutionApi:Instance"] = "weeklyup",
+                ["Stripe:SecretKey"] = "sk_test_e2e_placeholder",
+                ["Stripe:WebhookSecret"] = "whsec_e2e_placeholder",
+                ["Stripe:ProPriceId"] = "price_pro_e2e",
+                ["Stripe:BusinessPriceId"] = "price_business_e2e",
             };
 
             config.AddInMemoryCollection(testSettings);

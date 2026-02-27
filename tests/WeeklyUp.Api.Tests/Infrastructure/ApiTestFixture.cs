@@ -18,6 +18,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 
 using WeeklyUp.Application.Common.Interfaces;
+using WeeklyUp.Infrastructure.Billing;
 using WeeklyUp.Infrastructure.Persistence;
 using WeeklyUp.Shared.Constants;
 
@@ -35,6 +36,7 @@ public sealed class ApiTestFixture : IAsyncLifetime
     // Shared mocks — tests call ClearReceivedCalls() between scenarios when needed.
     public IMediator Mediator { get; } = Substitute.For<IMediator>();
     public ICurrentUserService CurrentUser { get; } = Substitute.For<ICurrentUserService>();
+    public IStripeService StripeService { get; } = Substitute.For<IStripeService>();
 
     public static readonly Guid DefaultUserId = Guid.NewGuid();
 
@@ -63,6 +65,10 @@ public sealed class ApiTestFixture : IAsyncLifetime
                         ["EvolutionApi:BaseUrl"] = "http://localhost:8080",
                         ["EvolutionApi:ApiKey"] = "test-key",
                         ["EvolutionApi:Instance"] = "test",
+                        ["Stripe:SecretKey"] = "sk_test_unit_placeholder",
+                        ["Stripe:WebhookSecret"] = "whsec_unit_placeholder",
+                        ["Stripe:ProPriceId"] = "price_pro_unit",
+                        ["Stripe:BusinessPriceId"] = "price_business_unit",
                     };
                     cfg.AddInMemoryCollection(settings);
                 });
@@ -84,6 +90,10 @@ public sealed class ApiTestFixture : IAsyncLifetime
                     // Replace ICurrentUserService with shared mock
                     services.RemoveAll<ICurrentUserService>();
                     services.AddSingleton(CurrentUser);
+
+                    // Replace IStripeService with shared singleton mock — avoids real Stripe calls
+                    services.RemoveAll<IStripeService>();
+                    services.AddSingleton(StripeService);
 
                     // Add test authentication scheme
                     services
