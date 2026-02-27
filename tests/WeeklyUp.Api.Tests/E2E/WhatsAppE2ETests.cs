@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using WeeklyUp.Api.Tests.Infrastructure;
 using WeeklyUp.Application.Common.DTOs;
-using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.Interfaces.Services;
@@ -21,31 +20,61 @@ namespace WeeklyUp.Api.Tests.E2E;
 /// Testes E2E para envio de WhatsApp via Evolution API.
 /// REQUER: Evolution API rodando em http://localhost:8080
 ///         com instância "weeklyup" conectada (QR Code escaneado).
+/// Os testes são pulados automaticamente se a Evolution API não estiver acessível.
+/// Para rodar: docker-compose up -d evolution-api &amp;&amp; escanear QR Code manualmente.
 /// </summary>
 [Collection("E2E")]
 [Trait("Category", "E2E")]
 [Trait("Category", "WhatsApp")]
 public sealed class WhatsAppE2ETests : IAsyncLifetime
 {
-    private readonly DatabaseFixture _fixture;
-
-    // Substitua pelo seu número real para receber a mensagem de teste
+    private const string EvolutionApiUrl = "http://localhost:8080";
     private const string TestPhoneNumber = "5511999999999";
+    private const string SkipMessage = "Evolution API não acessível em http://localhost:8080. Execute: docker-compose up -d evolution-api e escaneie o QR Code.";
+
+    private readonly DatabaseFixture _fixture;
+    private bool _evolutionApiAvailable;
 
     public WhatsAppE2ETests(DatabaseFixture fixture)
         => _fixture = fixture;
 
-    public Task InitializeAsync() => _fixture.ResetDatabaseAsync();
+    public async Task InitializeAsync()
+    {
+        _evolutionApiAvailable = await CheckEvolutionApiAsync();
+        if (_evolutionApiAvailable)
+        {
+            await _fixture.ResetDatabaseAsync();
+        }
+    }
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    [Fact]
+    private static async Task<bool> CheckEvolutionApiAsync()
+    {
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+        try
+        {
+            HttpResponseMessage response = await http.GetAsync(EvolutionApiUrl);
+            return response.IsSuccessStatusCode;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+        catch (TaskCanceledException)
+        {
+            return false;
+        }
+    }
+
+    [SkippableFact]
     public async Task EnviarMensagem_ComDadosValidos_RetornaSuccesso()
     {
+        Skip.If(!_evolutionApiAvailable, SkipMessage);
+
         // Arrange — busca o sender direto via DI (sem passar pela API HTTP)
         using IServiceScope scope = _fixture.Services.CreateScope();
-        var sender = scope.ServiceProvider.GetRequiredService<IWhatsAppSender>();
-
+        IWhatsAppSender sender = scope.ServiceProvider.GetRequiredService<IWhatsAppSender>();
         Report report = CriarReportFake();
 
         // Act
@@ -58,13 +87,14 @@ public sealed class WhatsAppE2ETests : IAsyncLifetime
         result.Value.Should().BeTrue();
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task EnviarMensagem_ComNumeroInvalido_RetornaFalha()
     {
+        Skip.If(!_evolutionApiAvailable, SkipMessage);
+
         // Arrange
         using IServiceScope scope = _fixture.Services.CreateScope();
-        var sender = scope.ServiceProvider.GetRequiredService<IWhatsAppSender>();
-
+        IWhatsAppSender sender = scope.ServiceProvider.GetRequiredService<IWhatsAppSender>();
         Report report = CriarReportFake();
 
         // Act — número claramente inválido
@@ -75,9 +105,11 @@ public sealed class WhatsAppE2ETests : IAsyncLifetime
         result.IsFailure.Should().BeTrue();
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task EnviarRelatorio_ViaEndpointGenerateReport_DisparaWhatsApp()
     {
+        Skip.If(!_evolutionApiAvailable, SkipMessage);
+
         // Arrange — registra usuário e faz login para obter token
         const string ExternalAuthId = "google|whatsapp-test-user";
         const string Email = "whatsapp-test@exemplo.com";

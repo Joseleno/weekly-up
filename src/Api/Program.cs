@@ -1,26 +1,13 @@
-using System.Text;
-using System.Threading.RateLimiting;
-
 using Carter;
-
 using Hangfire;
-
 using HealthChecks.UI.Client;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.IdentityModel.Tokens;
-
 using Scalar.AspNetCore;
-
 using Serilog;
-
+using WeeklyUp.Api.Extensions;
 using WeeklyUp.Api.Middleware;
 using WeeklyUp.Application;
 using WeeklyUp.Infrastructure;
-using WeeklyUp.Infrastructure.BackgroundJobs;
-using WeeklyUp.Shared.Constants;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(formatProvider: System.Globalization.CultureInfo.InvariantCulture)
@@ -33,20 +20,11 @@ builder.Host.UseSerilog((ctx, cfg) =>
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-
-builder.Services.AddMediator(static options =>
-    options.ServiceLifetime = ServiceLifetime.Scoped);
-
-// Register Mediator pipeline behaviors (order matters: Logging → Validation → Transaction)
-builder.Services.AddScoped(
-    typeof(Mediator.IPipelineBehavior<,>),
-    typeof(WeeklyUp.Application.Common.Behaviors.LoggingBehavior<,>));
-builder.Services.AddScoped(
-    typeof(Mediator.IPipelineBehavior<,>),
-    typeof(WeeklyUp.Application.Common.Behaviors.ValidationBehavior<,>));
-builder.Services.AddScoped(
-    typeof(Mediator.IPipelineBehavior<,>),
-    typeof(WeeklyUp.Application.Common.Behaviors.TransactionBehavior<,>));
+builder.Services.AddWeeklyUpMediator();
+builder.Services.AddWeeklyUpAuthentication(builder.Configuration);
+builder.Services.AddWeeklyUpRateLimiter();
+builder.Services.AddWeeklyUpCors(builder.Configuration, builder.Environment);
+builder.Services.AddWeeklyUpHealthChecks(builder.Configuration);
 
 builder.Services.AddCarter(configurator: c =>
 {
@@ -60,87 +38,8 @@ builder.Services.AddCarter(configurator: c =>
 });
 
 builder.Services.AddOpenApi();
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        IConfigurationSection jwt = builder.Configuration.GetSection("Jwt");
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwt["Issuer"],
-            ValidAudience = jwt["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwt["Key"]!)),
-        };
-    });
-
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(Policies.ProPlan, policy =>
-        policy.RequireClaim(CustomClaimTypes.Plan, "Pro", "Business"))
-    .AddPolicy(Policies.BusinessPlan, policy =>
-        policy.RequireClaim(CustomClaimTypes.Plan, "Business"));
-
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
-
-builder.Services.AddHealthChecks()
-    .AddNpgSql(
-        builder.Configuration.GetConnectionString("Database")!,
-        name: "postgresql",
-        tags: ["db", "ready"])
-    .AddRedis(
-        builder.Configuration.GetConnectionString("Redis")!,
-        name: "redis",
-        tags: ["cache", "ready"]);
-
-builder.Services.AddCors(options =>
-    options.AddDefaultPolicy(policy =>
-    {
-        if (builder.Environment.IsDevelopment())
-        {
-            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-        }
-        else
-        {
-            string[] allowedOrigins = builder.Configuration
-                .GetSection("Cors:AllowedOrigins")
-                .Get<string[]>() ?? [];
-            policy.WithOrigins(allowedOrigins)
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        }
-    }));
-
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddPolicy("api", context =>
-    {
-        string? userId = context.User.FindFirst(CustomClaimTypes.UserId)?.Value;
-        string partitionKey = userId ?? context.Connection.RemoteIpAddress?.ToString() ?? "anon";
-        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = 60,
-            Window = TimeSpan.FromMinutes(1),
-            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-            QueueLimit = 0,
-        });
-    });
-
-    options.AddPolicy("webhook", _ =>
-        RateLimitPartition.GetFixedWindowLimiter("stripe-webhook", _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = 300,
-            Window = TimeSpan.FromMinutes(1),
-            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-            QueueLimit = 0,
-        }));
-});
 
 WebApplication app = builder.Build();
 
@@ -166,19 +65,7 @@ if (app.Environment.IsDevelopment())
     app.UseHangfireDashboard("/hangfire");
 }
 
-// Recurring jobs — toda segunda-feira às 7h (horário de Brasília) e token refresh a cada 6h
-IRecurringJobManager recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
-var brasiliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-recurringJobs.AddOrUpdate<WeeklyReportGenerationJob>(
-    recurringJobId: "weekly-report-generation",
-    methodCall: j => j.ExecuteAsync(CancellationToken.None),
-    cronExpression: "0 7 * * 1",
-    options: new RecurringJobOptions { TimeZone = brasiliaTimeZone });
-
-recurringJobs.AddOrUpdate<TokenRefreshJob>(
-    recurringJobId: "integration-token-refresh",
-    methodCall: j => j.ExecuteAsync(CancellationToken.None),
-    cronExpression: "0 */6 * * *");
+app.MapRecurringJobs();
 
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
@@ -207,6 +94,5 @@ finally
 // Required for WebApplicationFactory in E2E tests
 public partial class Program
 {
-    protected Program()
-    { }
+    protected Program() { }
 }
