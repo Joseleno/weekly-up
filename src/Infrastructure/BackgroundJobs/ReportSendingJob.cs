@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 
+using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Interfaces;
 using WeeklyUp.Domain.Interfaces.Services;
+using WeeklyUp.Shared.Constants;
 
 namespace WeeklyUp.Infrastructure.BackgroundJobs;
 
@@ -10,17 +12,20 @@ public sealed class ReportSendingJob
     private readonly IEmailSender _emailSender;
     private readonly IWhatsAppSender _whatsAppSender;
     private readonly IUnitOfWork _uow;
+    private readonly IApplicationCacheService _cache;
     private readonly ILogger<ReportSendingJob> _logger;
 
     public ReportSendingJob(
         IEmailSender emailSender,
         IWhatsAppSender whatsAppSender,
         IUnitOfWork uow,
+        IApplicationCacheService cache,
         ILogger<ReportSendingJob> logger)
     {
         _emailSender = emailSender;
         _whatsAppSender = whatsAppSender;
         _uow = uow;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -65,6 +70,9 @@ public sealed class ReportSendingJob
         report.MarkSent();
         _uow.Reports.Update(report);
         await _uow.SaveChangesAsync(ct);
+
+        await _cache.RemoveAsync(CacheKeys.Report(report.Id), ct);
+        await _cache.RemoveAsync(CacheKeys.Dashboard(report.UserId), ct);
 
         if (_logger.IsEnabled(LogLevel.Information))
         {

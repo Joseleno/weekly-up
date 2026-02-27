@@ -221,6 +221,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<ReportSendingJob>();
         services.AddScoped<IntegrationSyncJob>();
         services.AddScoped<TokenRefreshJob>();
+        services.AddScoped<IReportJobScheduler, HangfireReportJobScheduler>();
 
         return services;
     }

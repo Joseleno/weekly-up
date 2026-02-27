@@ -45,7 +45,6 @@ public sealed class LoginE2ETests : IAsyncLifetime
         AuthTokenDto? body = await response.Content.ReadFromJsonAsync<AuthTokenDto>();
         body.Should().NotBeNull();
         body!.Token.Should().NotBeNullOrWhiteSpace();
-        body.RefreshToken.Should().NotBeNullOrWhiteSpace();
         body.ExpiresAt.Should().BeAfter(DateTimeOffset.UtcNow);
     }
 

@@ -244,18 +244,53 @@ public sealed class UserTests
     // ── VerifyEmail ─────────────────────────────────────────
 
     [Fact]
-    public void VerifyEmail_SetsIsEmailVerifiedAndRaisesEvent()
+    public void VerifyEmail_WithValidToken_SetsIsEmailVerifiedAndRaisesEvent()
     {
         // Arrange
         var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var token = Guid.NewGuid().ToString("N");
+        user.SetVerificationToken(token);
         user.ClearDomainEvents();
 
         // Act
-        user.VerifyEmail();
+        var result = user.VerifyEmail(token);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         user.IsEmailVerified.Should().BeTrue();
+        user.VerificationToken.Should().BeNull();
         user.DomainEvents.Should().ContainSingle().Which.Should().BeOfType<UserEmailVerifiedEvent>();
+    }
+
+    [Fact]
+    public void VerifyEmail_WithInvalidToken_ReturnsFailure()
+    {
+        // Arrange
+        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        user.SetVerificationToken("valid-token");
+
+        // Act
+        var result = user.VerifyEmail("wrong-token");
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        user.IsEmailVerified.Should().BeFalse();
+    }
+
+    [Fact]
+    public void VerifyEmail_WhenAlreadyVerified_ReturnsFailure()
+    {
+        // Arrange
+        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var token = Guid.NewGuid().ToString("N");
+        user.SetVerificationToken(token);
+        user.VerifyEmail(token);
+
+        // Act
+        var result = user.VerifyEmail(token);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
     }
 
     // ── Capability checks ───────────────────────────────────

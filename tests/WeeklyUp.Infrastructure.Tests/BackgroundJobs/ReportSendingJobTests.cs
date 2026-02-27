@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 
 using NSubstitute;
 
+using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Enums;
 using WeeklyUp.Domain.Interfaces;
@@ -20,6 +21,7 @@ public sealed class ReportSendingJobTests
     private readonly IEmailSender _emailSender = Substitute.For<IEmailSender>();
     private readonly IWhatsAppSender _whatsAppSender = Substitute.For<IWhatsAppSender>();
     private readonly IUnitOfWork _uow = Substitute.For<IUnitOfWork>();
+    private readonly IApplicationCacheService _cache = Substitute.For<IApplicationCacheService>();
     private readonly ILogger<ReportSendingJob> _logger = Substitute.For<ILogger<ReportSendingJob>>();
     private readonly IReportRepository _reports = Substitute.For<IReportRepository>();
     private readonly IUserRepository _users = Substitute.For<IUserRepository>();
@@ -30,7 +32,7 @@ public sealed class ReportSendingJobTests
         _uow.Users.Returns(_users);
     }
 
-    private ReportSendingJob CreateJob() => new(_emailSender, _whatsAppSender, _uow, _logger);
+    private ReportSendingJob CreateJob() => new(_emailSender, _whatsAppSender, _uow, _cache, _logger);
 
     private static Report CreateReport(Guid? userId = null)
     {

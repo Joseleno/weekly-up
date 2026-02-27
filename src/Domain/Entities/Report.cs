@@ -19,6 +19,7 @@ public sealed class Report : AggregateRoot
     public ReportInsights? Insights { get; private set; }
     public DateTime? EmailSentAt { get; private set; }
     public DateTime? WhatsAppSentAt { get; private set; }
+    public string? FailureReason { get; private set; }
 
     private Report() { }
 
@@ -92,6 +93,7 @@ public sealed class Report : AggregateRoot
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(error);
         Status = ReportStatus.Failed;
+        FailureReason = error;
         UpdatedAt = DateTime.UtcNow;
     }
 }

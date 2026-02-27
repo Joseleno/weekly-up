@@ -38,6 +38,7 @@ public sealed class RegisterUserCommandHandler
         }
 
         User user = userResult.Value;
+        user.SetVerificationToken(Guid.NewGuid().ToString("N"));
         ReportPreference preference = ReportPreference.CreateDefault(user.Id);
 
         await _uow.Users.AddAsync(user, cancellationToken);

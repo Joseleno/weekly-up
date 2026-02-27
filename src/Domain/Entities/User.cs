@@ -24,6 +24,7 @@ public sealed class User : AggregateRoot
     public string? PhoneNumber { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsEmailVerified { get; private set; }
+    public string? VerificationToken { get; private set; }
     public IReadOnlyCollection<Integration> Integrations => _integrations.AsReadOnly();
 
     private User() { }
@@ -135,11 +136,30 @@ public sealed class User : AggregateRoot
         return true;
     }
 
-    public void VerifyEmail()
+    public void SetVerificationToken(string token)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        VerificationToken = token;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public Result VerifyEmail(string token)
+    {
+        if (IsEmailVerified)
+        {
+            return Result.Failure(AppError.Validation("User.AlreadyVerified", "Email ja verificado."));
+        }
+
+        if (string.IsNullOrWhiteSpace(VerificationToken) || VerificationToken != token)
+        {
+            return Result.Failure(AppError.Validation("User.InvalidVerificationToken", "Token de verificacao invalido."));
+        }
+
         IsEmailVerified = true;
+        VerificationToken = null;
         UpdatedAt = DateTime.UtcNow;
         RaiseDomainEvent(new UserEmailVerifiedEvent(Id));
+        return Result.Success();
     }
 
     public Result<bool> UpdateProfile(string name, string businessName, BusinessType businessType)

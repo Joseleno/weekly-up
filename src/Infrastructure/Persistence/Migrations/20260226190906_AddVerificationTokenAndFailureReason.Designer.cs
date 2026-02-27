@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WeeklyUp.Infrastructure.Persistence;
@@ -12,9 +13,11 @@ using WeeklyUp.Infrastructure.Persistence;
 namespace WeeklyUp.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260226190906_AddVerificationTokenAndFailureReason")]
+    partial class AddVerificationTokenAndFailureReason
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,7 +88,12 @@ namespace WeeklyUp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "Provider")
                         .IsUnique()
@@ -319,11 +327,14 @@ namespace WeeklyUp.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("WeeklyUp.Domain.Entities.Integration", b =>
                 {
                     b.HasOne("WeeklyUp.Domain.Entities.User", null)
-                        .WithMany("Integrations")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_integrations_users");
+                        .IsRequired();
+
+                    b.HasOne("WeeklyUp.Domain.Entities.User", null)
+                        .WithMany("Integrations")
+                        .HasForeignKey("UserId1");
                 });
 
             modelBuilder.Entity("WeeklyUp.Domain.Entities.Report", b =>

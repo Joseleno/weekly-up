@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +22,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
 
         var (statusCode, problem) = MapException(exception);
+        problem.Extensions["traceId"] = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
         httpContext.Response.StatusCode = statusCode;
         await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);

@@ -34,6 +34,11 @@ public sealed class ReportConfiguration : IEntityTypeConfiguration<Report>
         builder.Property(r => r.WhatsAppSentAt)
             .HasColumnName("whatsapp_sent_at");
 
+        builder.Property(r => r.FailureReason)
+            .HasColumnName("failure_reason")
+            .HasMaxLength(500)
+            .IsRequired(false);
+
         ConfigureWeekRange(builder);
         ConfigureMetrics(builder);
         ConfigureDemographics(builder);

@@ -13,9 +13,9 @@ namespace WeeklyUp.Api.Tests.Infrastructure;
 
 public sealed class WeeklyUpWebAppFactory : WebApplicationFactory<Program>
 {
-    // Mesma connection string dos user secrets / ambiente CI
     public static readonly string ConnectionString =
-        "Host=localhost;Port=5432;Database=weeklyup_e2e;Username=weeklyup;Password=weeklyup123";
+        Environment.GetEnvironmentVariable("TEST_DB_CONNECTION")
+        ?? "Host=localhost;Port=5432;Database=weeklyup_e2e;Username=weeklyup;Password=weeklyup123";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

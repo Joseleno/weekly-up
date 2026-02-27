@@ -29,22 +29,17 @@ public sealed class GetReportDetailQueryHandler
         GetReportDetailQuery query,
         CancellationToken cancellationToken)
     {
+        var report = await _reports.GetByIdAsync(query.ReportId, cancellationToken);
+        if (report is null || report.UserId != query.UserId)
+        {
+            return AppError.NotFound("Report.NotFound", "Relatório não encontrado.");
+        }
+
         var cacheKey = CacheKeys.Report(query.ReportId);
         var cached = await _cache.GetAsync<ReportDetailDto>(cacheKey, cancellationToken);
         if (cached is not null)
         {
             return cached;
-        }
-
-        var report = await _reports.GetByIdAsync(query.ReportId, cancellationToken);
-        if (report is null)
-        {
-            return AppError.NotFound("Report.NotFound", $"Relatório '{query.ReportId}' não encontrado.");
-        }
-
-        if (report.UserId != query.UserId)
-        {
-            return AppError.Forbidden("Report.Forbidden", "Acesso negado ao relatório solicitado.");
         }
 
         var dto = report.ToDetailDto();

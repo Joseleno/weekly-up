@@ -23,7 +23,8 @@ public sealed class ReportsModule : ICarterModule
     {
         RouteGroupBuilder group = app.MapGroup("/api/reports")
             .WithTags("Reports")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting("api");
 
         group.MapGet("/", async (
             IMediator mediator,
@@ -37,7 +38,8 @@ public sealed class ReportsModule : ICarterModule
             return result.Match(
                 dto => Results.Ok(dto),
                 error => error.ToProblem());
-        });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{id:guid}", async (
             Guid id,
@@ -50,7 +52,8 @@ public sealed class ReportsModule : ICarterModule
             return result.Match(
                 dto => Results.Ok(dto),
                 error => error.ToProblem());
-        });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPut("/preferences", async (
             UpdatePreferencesRequest request,
@@ -67,7 +70,8 @@ public sealed class ReportsModule : ICarterModule
             return result.Match(
                 _ => Results.NoContent(),
                 error => error.ToProblem());
-        });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/generate", async (
             IMediator mediator,
@@ -79,6 +83,7 @@ public sealed class ReportsModule : ICarterModule
             return result.Match(
                 _ => Results.Accepted(),
                 error => error.ToProblem());
-        });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
     }
 }

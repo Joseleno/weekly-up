@@ -9,42 +9,50 @@ namespace WeeklyUp.Infrastructure.Security;
 
 public sealed class AesTokenEncryptor : ITokenEncryptor
 {
-    private readonly byte[] _key;
+    private const int NonceSizeBytes = 12;
+    private const int TagSizeBytes = 16;
+
+    private readonly byte[] _keyBytes;
 
     public AesTokenEncryptor(IOptions<AesEncryptionOptions> options)
     {
-        _key = Convert.FromBase64String(options.Value.Key);
+        _keyBytes = SHA256.HashData(Encoding.UTF8.GetBytes(options.Value.Key));
     }
 
     public string Encrypt(string plainText)
     {
-        using var aes = CreateAes();
-        aes.GenerateIV();
-        using var encryptor = aes.CreateEncryptor();
+        ArgumentException.ThrowIfNullOrWhiteSpace(plainText);
+
         var plainBytes = Encoding.UTF8.GetBytes(plainText);
-        var cipherBytes = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
-        var result = new byte[aes.IV.Length + cipherBytes.Length];
-        aes.IV.CopyTo(result, 0);
-        cipherBytes.CopyTo(result, aes.IV.Length);
+        var nonce = new byte[NonceSizeBytes];
+        RandomNumberGenerator.Fill(nonce);
+        var cipherText = new byte[plainBytes.Length];
+        var tag = new byte[TagSizeBytes];
+
+        using var aes = new AesGcm(_keyBytes, TagSizeBytes);
+        aes.Encrypt(nonce, plainBytes, cipherText, tag);
+
+        var result = new byte[NonceSizeBytes + cipherText.Length + TagSizeBytes];
+        nonce.CopyTo(result, 0);
+        cipherText.CopyTo(result, NonceSizeBytes);
+        tag.CopyTo(result, NonceSizeBytes + cipherText.Length);
+
         return Convert.ToBase64String(result);
     }
 
     public string Decrypt(string cipherText)
     {
-        var allBytes = Convert.FromBase64String(cipherText);
-        using var aes = CreateAes();
-        aes.IV = allBytes[..16];
-        using var decryptor = aes.CreateDecryptor();
-        var plainBytes = decryptor.TransformFinalBlock(allBytes, 16, allBytes.Length - 16);
-        return Encoding.UTF8.GetString(plainBytes);
-    }
+        ArgumentException.ThrowIfNullOrWhiteSpace(cipherText);
 
-    private Aes CreateAes()
-    {
-        var aes = Aes.Create();
-        aes.Key = _key;
-        aes.Mode = CipherMode.CBC;
-        aes.Padding = PaddingMode.PKCS7;
-        return aes;
+        var data = Convert.FromBase64String(cipherText);
+        var nonce = data[..NonceSizeBytes];
+        var tag = data[^TagSizeBytes..];
+        var cipher = data[NonceSizeBytes..^TagSizeBytes];
+        var plainText = new byte[cipher.Length];
+
+        using var aes = new AesGcm(_keyBytes, TagSizeBytes);
+        aes.Decrypt(nonce, cipher, tag, plainText);
+
+        return Encoding.UTF8.GetString(plainText);
     }
 }

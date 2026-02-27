@@ -72,6 +72,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.IsEmailVerified)
             .HasColumnName("is_email_verified");
 
+        builder.Property(u => u.VerificationToken)
+            .HasColumnName("verification_token")
+            .HasMaxLength(64)
+            .IsRequired(false);
+
         builder.HasIndex(u => u.ExternalAuthId)
             .HasDatabaseName("ix_users_external_auth_id")
             .IsUnique()
@@ -79,8 +84,10 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Ignore(u => u.DomainEvents);
 
-        builder.HasMany<Integration>()
+        builder.HasMany(u => u.Integrations)
             .WithOne()
-            .HasForeignKey(i => i.UserId);
+            .HasForeignKey(i => i.UserId)
+            .HasConstraintName("fk_integrations_users")
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
