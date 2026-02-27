@@ -7,6 +7,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+using NSubstitute;
+
+using StackExchange.Redis;
+
+using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Infrastructure.Persistence;
 
 namespace WeeklyUp.Api.Tests.Infrastructure;
@@ -30,6 +35,16 @@ public sealed class WeeklyUpWebAppFactory : WebApplicationFactory<Program>
 
             // Substitui Hangfire PostgreSQL por in-memory para evitar conexão ao banco durante testes
             services.AddHangfire(cfg => cfg.UseInMemoryStorage());
+
+            // Substitui Redis por mock — cache não é crítico para validar fluxos E2E
+            services.RemoveAll<IConnectionMultiplexer>();
+            services.AddSingleton(_ => Substitute.For<IConnectionMultiplexer>());
+            services.RemoveAll<IApplicationCacheService>();
+            services.AddScoped(_ => Substitute.For<IApplicationCacheService>());
+
+            // Substitui o scheduler de jobs por mock — evita que Hangfire dispare jobs externos nos E2E
+            services.RemoveAll<IReportJobScheduler>();
+            services.AddScoped(_ => Substitute.For<IReportJobScheduler>());
         });
 
         builder.ConfigureAppConfiguration((_, config) =>

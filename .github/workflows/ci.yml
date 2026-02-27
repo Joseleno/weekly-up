@@ -94,6 +94,7 @@ jobs:
             --logger "trx;LogFileName=e2e-results.trx"
         env:
           ASPNETCORE_ENVIRONMENT: Testing
+          TEST_DB_CONNECTION: "Host=localhost;Port=5432;Database=weeklyup_e2e;Username=weeklyup;Password=weeklyup123"
 
       - name: Publicar resultado dos testes E2E
         uses: actions/upload-artifact@v4
