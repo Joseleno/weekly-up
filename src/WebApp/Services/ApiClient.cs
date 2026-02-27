@@ -84,4 +84,20 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<BillingPortalSessionResponse>(ct);
     }
+
+    public async Task UpdateProfileAsync(
+        UpdateProfileRequest request,
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.PutAsJsonAsync("api/users/profile", request, ct);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task UpdateReportPreferencesAsync(
+        UpdateReportPreferencesRequest request,
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.PutAsJsonAsync("api/reports/preferences", request, ct);
+        response.EnsureSuccessStatusCode();
+    }
 }

@@ -1,0 +1,53 @@
+@attribute [AllowAnonymous]
+
+<MudPaper Elevation="0" Class="py-12 px-4">
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-8"><b>Tudo que você precisa saber</b></MudText>
+
+        <MudGrid>
+            @foreach (var feature in _features)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="1" Class="h-100">
+                        <MudCardContent>
+                            <MudStack Spacing="2">
+                                <MudIcon Icon="@feature.Icon" Color="Color.Primary" Size="Size.Large" />
+                                <MudText Typo="Typo.subtitle1"><b>@feature.Title</b></MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@feature.Description</MudText>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+@code {
+    private static readonly (string Icon, string Title, string Description)[] _features =
+    [
+        (Icons.Material.Filled.TrendingUp,
+         "Métricas em tempo real",
+         "Receita, tráfego, conversões e muito mais consolidados em um só lugar."),
+
+        (Icons.Material.Filled.Psychology,
+         "Insights de IA",
+         "Análise inteligente identifica o que está funcionando e o que precisa de atenção."),
+
+        (Icons.Material.Filled.Schedule,
+         "Entrega toda segunda",
+         "Relatório automático toda segunda-feira. Você começa a semana preparado."),
+
+        (Icons.Material.Filled.DeviceHub,
+         "Múltiplas integrações",
+         "Google Analytics, WhatsApp Business e mais. Todos os dados no mesmo relatório."),
+
+        (Icons.Material.Filled.PhoneAndroid,
+         "Responsivo e PWA",
+         "Acesse do celular, tablet ou desktop. Instale como app sem app store."),
+
+        (Icons.Material.Filled.Security,
+         "Seus dados protegidos",
+         "Criptografia end-to-end. Seus dados nunca são compartilhados com terceiros."),
+    ];
+}

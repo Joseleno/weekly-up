@@ -29,4 +29,10 @@ public interface IApiClient
 
     public Task<BillingPortalSessionResponse?> CreateBillingPortalSessionAsync(
         CancellationToken ct = default);
+
+    public Task UpdateProfileAsync(UpdateProfileRequest request, CancellationToken ct = default);
+
+    public Task UpdateReportPreferencesAsync(
+        UpdateReportPreferencesRequest request,
+        CancellationToken ct = default);
 }

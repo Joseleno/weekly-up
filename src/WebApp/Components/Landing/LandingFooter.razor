@@ -1,0 +1,19 @@
+@attribute [AllowAnonymous]
+
+<MudPaper Elevation="0" Class="py-8 px-4" Style="background: var(--mud-palette-dark)">
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Typo="Typo.h6" Color="Color.Primary"><b>WeeklyUp</b></MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                Relatórios semanais automáticos para donos de pequenos negócios.
+            </MudText>
+            <MudStack Row="true" Spacing="3">
+                <MudLink Href="/login" Typo="Typo.body2">Entrar</MudLink>
+                <MudLink Href="/register" Typo="Typo.body2">Criar conta</MudLink>
+            </MudStack>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                © @DateTime.UtcNow.Year WeeklyUp. Todos os direitos reservados.
+            </MudText>
+        </MudStack>
+    </MudContainer>
+</MudPaper>

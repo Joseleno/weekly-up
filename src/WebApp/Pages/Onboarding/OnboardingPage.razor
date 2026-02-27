@@ -1,0 +1,209 @@
+@page "/onboarding"
+@attribute [Authorize]
+
+@inject IApiClient ApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Configuração inicial — WeeklyUp</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+    <MudStack Spacing="4">
+        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+            <MudText Typo="Typo.h5" Color="Color.Primary"><b>Bem-vindo ao WeeklyUp!</b></MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                Configure sua conta em menos de 2 minutos.
+            </MudText>
+        </MudStack>
+
+        <MudStepper @ref="_stepper">
+            <MudStep Title="Seu negócio">
+                <MudStack Spacing="3" Class="pt-4">
+                    <MudText Typo="Typo.body1"><b>Como é o seu negócio?</b></MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Essas informações ajudam nossa IA a personalizar os insights do seu relatório.
+                    </MudText>
+
+                    <MudTextField @bind-Value="_businessName"
+                                  Label="Nome do negócio"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Store"
+                                  Required="true" />
+
+                    <MudSelect @bind-Value="_businessType"
+                               Label="Tipo de negócio"
+                               Variant="Variant.Outlined"
+                               Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Filled.Category"
+                               Required="true">
+                        @foreach (var type in _businessTypes)
+                        {
+                            <MudSelectItem Value="@type.Value">@type.Label</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+            </MudStep>
+
+            <MudStep Title="Relatório">
+                <MudStack Spacing="3" Class="pt-4">
+                    <MudText Typo="Typo.body1"><b>Quando enviar seu relatório?</b></MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        O relatório semanal será enviado toda segunda-feira. Escolha o horário ideal.
+                    </MudText>
+
+                    <MudSelect @bind-Value="_reportHour"
+                               Label="Horário de envio (segunda-feira)"
+                               Variant="Variant.Outlined"
+                               Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Filled.Schedule">
+                        @foreach (var hour in _reportHours)
+                        {
+                            <MudSelectItem Value="@hour.Value">@hour.Label</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudAlert Severity="Severity.Info" Dense="true">
+                        <MudText Typo="Typo.body2">
+                            Você pode alterar isso depois em <b>Configurações → Relatório</b>.
+                        </MudText>
+                    </MudAlert>
+                </MudStack>
+            </MudStep>
+
+            <MudStep Title="Integrações">
+                <MudStack Spacing="3" Class="pt-4">
+                    <MudText Typo="Typo.body1"><b>Conecte suas ferramentas (opcional)</b></MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Conecte agora ou depois em <b>Integrações</b>. Você pode pular esta etapa.
+                    </MudText>
+
+                    <MudCard Elevation="1">
+                        <MudCardContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Analytics" Color="Color.Primary" />
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.subtitle2">Google Analytics</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Tráfego e conversões</MudText>
+                                    </MudStack>
+                                </MudStack>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                                           Href="/integrations" Color="Color.Primary">
+                                    Conectar depois
+                                </MudButton>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
+
+                    <MudCard Elevation="1">
+                        <MudCardContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Chat" Color="Color.Success" />
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.subtitle2">WhatsApp Business</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Mensagens e atendimento</MudText>
+                                    </MudStack>
+                                </MudStack>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                                           Href="/integrations" Color="Color.Primary">
+                                    Conectar depois
+                                </MudButton>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
+                </MudStack>
+            </MudStep>
+
+            <MudStep Title="Pronto!">
+                <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="pt-4">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                             Color="Color.Success" Style="font-size: 4rem;" />
+                    <MudText Typo="Typo.h6" Align="Align.Center">
+                        Tudo configurado!
+                    </MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+                        Seu primeiro relatório será enviado na próxima segunda-feira.
+                        Explore o dashboard enquanto isso!
+                    </MudText>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large"
+                               OnClick="FinishOnboardingAsync"
+                               Disabled="_saving">
+                        @if (_saving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <span>Salvando...</span>
+                        }
+                        else
+                        {
+                            <span>Ir para o Dashboard</span>
+                        }
+                    </MudButton>
+                </MudStack>
+            </MudStep>
+        </MudStepper>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private MudStepper? _stepper;
+    private string _businessName = string.Empty;
+    private string _businessType = string.Empty;
+    private int _reportHour = 8;
+    private bool _saving;
+
+    private static readonly (string Value, string Label)[] _businessTypes =
+    [
+        ("Ecommerce", "E-commerce"),
+        ("Services", "Serviços"),
+        ("Food", "Alimentação"),
+        ("Retail", "Varejo físico"),
+        ("Education", "Educação"),
+        ("Health", "Saúde e Bem-estar"),
+        ("Other", "Outro"),
+    ];
+
+    private static readonly (int Value, string Label)[] _reportHours =
+    [
+        (7, "07:00"),
+        (8, "08:00"),
+        (9, "09:00"),
+        (10, "10:00"),
+        (11, "11:00"),
+        (12, "12:00"),
+    ];
+
+    private async Task FinishOnboardingAsync()
+    {
+        _saving = true;
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(_businessName) || !string.IsNullOrWhiteSpace(_businessType))
+            {
+                await ApiClient.UpdateProfileAsync(new UpdateProfileRequest(
+                    _businessName,
+                    _businessType));
+            }
+
+            await ApiClient.UpdateReportPreferencesAsync(new UpdateReportPreferencesRequest(
+                _reportHour,
+                DayOfWeek.Monday));
+
+            Navigation.NavigateTo("/");
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Erro ao salvar configurações. Você pode ajustar em Configurações.", Severity.Warning);
+            Navigation.NavigateTo("/");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}
