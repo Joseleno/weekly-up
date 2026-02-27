@@ -31,7 +31,7 @@ public sealed class RegisterUserCommandHandlerTests
     {
         // Arrange
         var command = new RegisterUserCommand("existing@example.com", "Test User", "Test Biz", BusinessType.Ecommerce);
-        var existingUser = User.Create("existing@example.com", "Existing User", "Existing Biz", BusinessType.Services).Value;
+        var existingUser = User.Create("existing@example.com", "Existing User", "Existing Biz", BusinessType.Services, verificationToken: "test-token").Value;
         _users.GetByEmailAsync(command.Email, Arg.Any<CancellationToken>()).Returns(existingUser);
 
         // Act

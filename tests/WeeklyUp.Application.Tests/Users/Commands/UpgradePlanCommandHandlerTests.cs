@@ -46,7 +46,7 @@ public sealed class UpgradePlanCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var command = new UpgradePlanCommand(userId, PlanType.Pro);
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         _users.GetByIdAsync(userId, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act

@@ -124,7 +124,10 @@ public static class InfrastructureServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<ResendOptions>(configuration.GetSection("Resend"));
+        services.AddOptions<ResendOptions>()
+            .Bind(configuration.GetSection("Resend"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         services.Configure<EvolutionApiOptions>(configuration.GetSection("EvolutionApi"));
         services.Configure<ClaudeOptions>(configuration.GetSection("Claude"));
 

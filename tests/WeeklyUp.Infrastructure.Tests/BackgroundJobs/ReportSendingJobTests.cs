@@ -44,7 +44,7 @@ public sealed class ReportSendingJobTests
 
     private static User CreateUserWithPlan(PlanType plan = PlanType.Free)
     {
-        var result = User.Create("user@test.com", "Test User", "My Business", BusinessType.Ecommerce);
+        var result = User.Create("user@test.com", "Test User", "My Business", BusinessType.Ecommerce, verificationToken: "test-token");
         var user = result.Value;
 
         if (plan >= PlanType.Pro)

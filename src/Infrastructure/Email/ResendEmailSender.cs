@@ -60,7 +60,7 @@ public sealed class ResendEmailSender : IEmailSender
     }
 
     private async Task<Result<bool>> SendEmailAsync(
-        string to, string subject, string html, CancellationToken ct)
+        string to, string subject, string html, CancellationToken cancellationToken)
     {
         try
         {
@@ -71,15 +71,19 @@ public sealed class ResendEmailSender : IEmailSender
                 subject,
                 html,
             };
-            var response = await _httpClient.PostAsJsonAsync("/emails", payload, _jsonOptions, ct);
+            var response = await _httpClient.PostAsJsonAsync("/emails", payload, _jsonOptions, cancellationToken);
             return response.IsSuccessStatusCode
                 ? Result.Success(true)
                 : AppError.Failure("Email.SendFailed", $"Resend retornou {response.StatusCode}");
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "Falha ao enviar email para {Email}", to);
-            return AppError.Failure("Email.Exception", ex.Message);
+            return AppError.Failure("Email.Exception", "Falha de comunicacao com o servico de email.");
         }
     }
 }

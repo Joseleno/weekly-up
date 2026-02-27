@@ -46,7 +46,7 @@ public sealed class CreateBillingPortalSessionCommandHandlerTests
     public async Task Handle_WhenUserHasNoStripeCustomerId_ReturnsValidationError()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         // user.StripeCustomerId is null — no Stripe subscription yet
         var command = new CreateBillingPortalSessionCommand(user.Id, "https://return.test");
         _users.GetByIdAsync(command.UserId, Arg.Any<CancellationToken>()).Returns(user);
@@ -64,7 +64,7 @@ public sealed class CreateBillingPortalSessionCommandHandlerTests
     public async Task Handle_WhenUserHasStripeCustomerId_ReturnsPortalUrl()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         user.SetStripeCustomerId("cus_existing123");
         var command = new CreateBillingPortalSessionCommand(user.Id, "https://return.test");
 

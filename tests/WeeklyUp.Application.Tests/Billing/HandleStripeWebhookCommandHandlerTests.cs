@@ -43,7 +43,7 @@ public sealed class HandleStripeWebhookCommandHandlerTests
     public async Task Handle_SubscriptionUpdated_WhenValidUserAndPrice_UpdatesPlan()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         var webhookEvent = new StripeWebhookEvent(
             "customer.subscription.updated", "evt_1", user.Id.ToString(), DefaultSettings.ProPriceId);
 
@@ -63,7 +63,7 @@ public sealed class HandleStripeWebhookCommandHandlerTests
     public async Task Handle_SubscriptionUpdated_WhenUnknownPriceId_DoesNotChangePlan()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         var webhookEvent = new StripeWebhookEvent(
             "customer.subscription.updated", "evt_1", user.Id.ToString(), "price_unknown_xyz");
 
@@ -118,7 +118,7 @@ public sealed class HandleStripeWebhookCommandHandlerTests
     public async Task Handle_SubscriptionUpdated_WhenPlanAlreadySame_SkipsSave_Idempotent()
     {
         // Arrange — simula webhook duplicado com mesmo plano
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         user.SetPlanFromWebhook(PlanType.Pro); // já está no Pro
         var webhookEvent = new StripeWebhookEvent(
             "customer.subscription.updated", "evt_1", user.Id.ToString(), DefaultSettings.ProPriceId);
@@ -140,7 +140,7 @@ public sealed class HandleStripeWebhookCommandHandlerTests
     public async Task Handle_SubscriptionDeleted_WhenUserOnPaidPlan_DowngradesToFree()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         user.SetPlanFromWebhook(PlanType.Pro);
         var webhookEvent = new StripeWebhookEvent(
             "customer.subscription.deleted", "evt_2", user.Id.ToString(), null);
@@ -161,7 +161,7 @@ public sealed class HandleStripeWebhookCommandHandlerTests
     public async Task Handle_SubscriptionDeleted_WhenAlreadyFree_SkipsSave_Idempotent()
     {
         // Arrange — usuário já é Free (webhook duplicado)
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         var webhookEvent = new StripeWebhookEvent(
             "customer.subscription.deleted", "evt_2", user.Id.ToString(), null);
 

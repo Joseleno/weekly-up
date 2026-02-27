@@ -47,7 +47,7 @@ public sealed class VerifyEmailCommandHandlerTests
         var userId = Guid.NewGuid();
         const string token = "valid-token";
         var command = new VerifyEmailCommand(userId, token);
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         user.SetVerificationToken(token);
         _users.GetByIdAsync(userId, Arg.Any<CancellationToken>()).Returns(user);
 
@@ -68,7 +68,7 @@ public sealed class VerifyEmailCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var command = new VerifyEmailCommand(userId, "wrong-token");
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         user.SetVerificationToken("correct-token");
         _users.GetByIdAsync(userId, Arg.Any<CancellationToken>()).Returns(user);
 

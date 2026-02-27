@@ -30,7 +30,7 @@ public sealed class WeeklyReportGenerationJobTests
 
     private static User CreateActiveUser()
     {
-        var result = User.Create("user@test.com", "Test User", "My Business", BusinessType.Ecommerce);
+        var result = User.Create("user@test.com", "Test User", "My Business", BusinessType.Ecommerce, verificationToken: "test-token");
         var user = result.Value;
         var token = Guid.NewGuid().ToString("N");
         user.SetVerificationToken(token);

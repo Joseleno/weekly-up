@@ -102,6 +102,8 @@ public sealed class UserRegisteredNotificationHandlerTests
 
         // Assert
         _logger.HasEntry(LogLevel.Error).Should().BeTrue();
+        await _emailSender.Received(1).SendVerificationEmailAsync(
+            evt.Email, evt.Name, evt.VerificationToken!, Arg.Any<CancellationToken>());
     }
 
     [Fact]

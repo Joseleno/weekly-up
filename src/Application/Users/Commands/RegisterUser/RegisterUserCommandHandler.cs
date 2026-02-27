@@ -25,7 +25,9 @@ public sealed class RegisterUserCommandHandler
             return AppError.Conflict("User.EmailAlreadyExists", "Email ja esta em uso.");
         }
 
-        var verificationToken = Guid.NewGuid().ToString("N");
+        var verificationToken = command.ExternalAuthId is null
+            ? Guid.NewGuid().ToString("N")
+            : null;
 
         Result<User> userResult = User.Create(
             command.Email,

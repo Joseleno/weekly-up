@@ -51,7 +51,7 @@ public sealed class ReportDataGenerationJobTests
 
     private static User CreateUser()
     {
-        var result = User.Create("user@test.com", "Test User", "My Business", BusinessType.Ecommerce);
+        var result = User.Create("user@test.com", "Test User", "My Business", BusinessType.Ecommerce, verificationToken: "test-token");
         return result.Value;
     }
 
@@ -66,7 +66,7 @@ public sealed class ReportDataGenerationJobTests
     {
         var encryptor = Substitute.For<ITokenEncryptor>();
         encryptor.Encrypt(Arg.Any<string>()).Returns("encrypted-token");
-        var userResult = User.Create("ga4owner@test.com", "GA4 Owner", "GA4 Business", BusinessType.Ecommerce);
+        var userResult = User.Create("ga4owner@test.com", "GA4 Owner", "GA4 Business", BusinessType.Ecommerce, verificationToken: "test-token");
         var user = userResult.Value;
         var integrationResult = user.AddIntegration(
             IntegrationProvider.GoogleAnalytics4,

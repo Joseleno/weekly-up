@@ -26,6 +26,7 @@ public sealed class User : AggregateRoot
     public bool IsActive { get; private set; }
     public bool IsEmailVerified { get; private set; }
     public string? VerificationToken { get; private set; }
+    public DateTime? VerificationTokenExpiresAt { get; private set; }
     public IReadOnlyCollection<Integration> Integrations => _integrations.AsReadOnly();
 
     private User() { }
@@ -55,6 +56,13 @@ public sealed class User : AggregateRoot
             return AppError.Validation("User.NameEmpty", "Nome nao pode ser vazio.");
         }
 
+        if (externalAuthId is null && string.IsNullOrWhiteSpace(verificationToken))
+        {
+            return AppError.Validation(
+                "User.VerificationTokenRequired",
+                "Token de verificacao obrigatorio para usuarios sem autenticacao externa.");
+        }
+
         User user = new()
         {
             Email = emailResult.Value,
@@ -63,12 +71,15 @@ public sealed class User : AggregateRoot
             BusinessType = businessType,
             Plan = PlanType.Free,
             IsActive = true,
-            IsEmailVerified = false,
+            IsEmailVerified = externalAuthId is not null,
             ExternalAuthId = externalAuthId,
-            VerificationToken = verificationToken,
+            VerificationToken = externalAuthId is null ? verificationToken : null,
+            VerificationTokenExpiresAt = externalAuthId is null && verificationToken is not null
+                ? DateTime.UtcNow.AddHours(24)
+                : null,
         };
 
-        user.RaiseDomainEvent(new UserRegisteredEvent(user.Id, user.Email.Value, user.Name, verificationToken));
+        user.RaiseDomainEvent(new UserRegisteredEvent(user.Id, user.Email.Value, user.Name, user.VerificationToken));
         return user;
     }
 
@@ -155,6 +166,15 @@ public sealed class User : AggregateRoot
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(token);
         VerificationToken = token;
+        VerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    internal void SetVerificationTokenWithExpiry(string token, DateTime expiresAt)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        VerificationToken = token;
+        VerificationTokenExpiresAt = expiresAt;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -165,6 +185,11 @@ public sealed class User : AggregateRoot
             return Result.Failure(AppError.Validation("User.AlreadyVerified", "Email ja verificado."));
         }
 
+        if (VerificationTokenExpiresAt.HasValue && DateTime.UtcNow > VerificationTokenExpiresAt.Value)
+        {
+            return Result.Failure(AppError.Validation("User.VerificationTokenExpired", "Token de verificacao expirado."));
+        }
+
         if (string.IsNullOrWhiteSpace(VerificationToken) || VerificationToken != token)
         {
             return Result.Failure(AppError.Validation("User.InvalidVerificationToken", "Token de verificacao invalido."));
@@ -172,6 +197,7 @@ public sealed class User : AggregateRoot
 
         IsEmailVerified = true;
         VerificationToken = null;
+        VerificationTokenExpiresAt = null;
         UpdatedAt = DateTime.UtcNow;
         RaiseDomainEvent(new UserEmailVerifiedEvent(Id));
         return Result.Success();

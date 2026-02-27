@@ -56,7 +56,7 @@ public sealed class GetUserDashboardQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var query = new GetUserDashboardQuery(userId);
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         _cache.GetAsync<UserDashboardDto>(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((UserDashboardDto?)null);
         _users.GetByIdWithIntegrationsAsync(userId, Arg.Any<CancellationToken>()).Returns(user);

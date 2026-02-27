@@ -6,13 +6,13 @@ using WeeklyUp.Domain.ValueObjects;
 
 namespace WeeklyUp.Infrastructure.Email.Templates;
 
-public static class WeeklyReportEmailTemplate
+internal static class WeeklyReportEmailTemplate
 {
     private const string DashboardUrl = "https://weeklyup.app/dashboard";
     private const string PreferencesUrl = "https://weeklyup.app/settings/preferences";
     private const string UnsubscribeUrl = "https://weeklyup.app/unsubscribe";
 
-    public static string Build(string recipientName, Report report)
+    internal static string Build(string recipientName, Report report)
     {
         var metrics = report.Metrics;
         var insights = report.Insights;
@@ -249,9 +249,5 @@ public static class WeeklyReportEmailTemplate
     }
 
     private static string EscapeHtml(string? value) =>
-        value is null ? string.Empty
-        : value.Replace("&", "&amp;")
-               .Replace("<", "&lt;")
-               .Replace(">", "&gt;")
-               .Replace("\"", "&quot;");
+        value is null ? string.Empty : System.Net.WebUtility.HtmlEncode(value);
 }

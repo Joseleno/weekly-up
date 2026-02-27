@@ -72,7 +72,7 @@ public sealed class GetIntegrationsQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var query = new GetIntegrationsQuery(userId);
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         var encryptor = Substitute.For<ITokenEncryptor>();
         encryptor.Encrypt(Arg.Any<string>()).Returns(args => $"enc-{args[0]}");
         user.AddIntegration(

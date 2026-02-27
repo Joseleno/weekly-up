@@ -7,6 +7,8 @@ using Microsoft.Extensions.Options;
 
 using NSubstitute;
 
+using WeeklyUp.Domain.Entities;
+using WeeklyUp.Domain.ValueObjects;
 using WeeklyUp.Infrastructure.Email;
 
 namespace WeeklyUp.Infrastructure.Tests.Email;
@@ -157,6 +159,74 @@ public sealed class ResendEmailSenderTests
         {
             // Act
             var result = await sut.SendWelcomeAsync(RecipientEmail, RecipientName);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Code.Should().Be("Email.Exception");
+        }
+    }
+
+    private static Report CreateTestReport()
+    {
+        var weekRange = DateRange.Create(
+            new DateOnly(2025, 1, 6),
+            new DateOnly(2025, 1, 12)).Value;
+        return Report.Create(Guid.NewGuid(), weekRange);
+    }
+
+    [Fact]
+    public async Task SendWeeklyReportAsync_WhenHttpSuccess_ReturnsSuccess()
+    {
+        // Arrange
+#pragma warning disable CA2000
+        var (sut, client) = CreateSender(new FakeHttpMessageHandler(HttpStatusCode.OK));
+#pragma warning restore CA2000
+        using (client)
+        {
+            var report = CreateTestReport();
+
+            // Act
+            var result = await sut.SendWeeklyReportAsync(RecipientEmail, RecipientName, report);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task SendWeeklyReportAsync_WhenHttpFails_ReturnsFailure()
+    {
+        // Arrange
+#pragma warning disable CA2000
+        var (sut, client) = CreateSender(new FakeHttpMessageHandler(HttpStatusCode.InternalServerError));
+#pragma warning restore CA2000
+        using (client)
+        {
+            var report = CreateTestReport();
+
+            // Act
+            var result = await sut.SendWeeklyReportAsync(RecipientEmail, RecipientName, report);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Code.Should().Be("Email.SendFailed");
+        }
+    }
+
+    [Fact]
+    public async Task SendWeeklyReportAsync_WhenHttpRequestException_ReturnsFailure()
+    {
+        // Arrange
+#pragma warning disable CA2000
+        var (sut, client) = CreateSender(new ThrowingHttpMessageHandler());
+#pragma warning restore CA2000
+        using (client)
+        {
+            var report = CreateTestReport();
+
+            // Act
+            var result = await sut.SendWeeklyReportAsync(RecipientEmail, RecipientName, report);
 
             // Assert
             result.IsFailure.Should().BeTrue();

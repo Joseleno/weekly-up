@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using FluentAssertions;
 
 using NSubstitute;
@@ -12,11 +14,23 @@ namespace WeeklyUp.Domain.Testes.Entities;
 
 public sealed class UserTests
 {
+    private const string DefaultToken = "test-verification-token";
+
     private static ITokenEncryptor CreateEncryptor()
     {
         var encryptor = Substitute.For<ITokenEncryptor>();
         encryptor.Encrypt(Arg.Any<string>()).Returns(x => $"enc_{x.Arg<string>()}");
         return encryptor;
+    }
+
+    private static User CreateUser(
+        string email = "user@test.com",
+        string name = "Jo\u00e3o",
+        string businessName = "Loja",
+        BusinessType businessType = BusinessType.Ecommerce,
+        string? verificationToken = DefaultToken)
+    {
+        return User.Create(email, name, businessName, businessType, verificationToken: verificationToken).Value;
     }
 
     // ── Create ──────────────────────────────────────────────
@@ -25,22 +39,25 @@ public sealed class UserTests
     public void Create_ValidData_ReturnsSuccess()
     {
         // Act
-        var result = User.Create("user@test.com", "João Silva", "Minha Loja", BusinessType.Ecommerce);
+        var result = User.Create("user@test.com", "Jo\u00e3o Silva", "Minha Loja", BusinessType.Ecommerce, verificationToken: DefaultToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Email.Value.Should().Be("user@test.com");
-        result.Value.Name.Should().Be("João Silva");
+        result.Value.Name.Should().Be("Jo\u00e3o Silva");
         result.Value.Plan.Should().Be(PlanType.Free);
         result.Value.IsActive.Should().BeTrue();
         result.Value.IsEmailVerified.Should().BeFalse();
+        result.Value.VerificationToken.Should().Be(DefaultToken);
+        result.Value.VerificationTokenExpiresAt.Should().NotBeNull();
+        result.Value.VerificationTokenExpiresAt!.Value.Should().BeCloseTo(DateTime.UtcNow.AddHours(24), TimeSpan.FromSeconds(5));
     }
 
     [Fact]
     public void Create_InvalidEmail_ReturnsFailure()
     {
         // Act
-        var result = User.Create("nao-e-email", "João", "Loja", BusinessType.Ecommerce);
+        var result = User.Create("nao-e-email", "Jo\u00e3o", "Loja", BusinessType.Ecommerce, verificationToken: DefaultToken);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -51,7 +68,7 @@ public sealed class UserTests
     public void Create_EmptyName_ReturnsFailure()
     {
         // Act
-        var result = User.Create("user@test.com", "   ", "Loja", BusinessType.Ecommerce);
+        var result = User.Create("user@test.com", "   ", "Loja", BusinessType.Ecommerce, verificationToken: DefaultToken);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -62,7 +79,7 @@ public sealed class UserTests
     public void Create_InvalidBusinessName_ReturnsFailure()
     {
         // Act
-        var result = User.Create("user@test.com", "João", "A", BusinessType.Ecommerce);
+        var result = User.Create("user@test.com", "Jo\u00e3o", "A", BusinessType.Ecommerce, verificationToken: DefaultToken);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -73,7 +90,7 @@ public sealed class UserTests
     public void Create_RaisesUserRegisteredEvent()
     {
         // Act
-        var result = User.Create("user@test.com", "João", "Minha Loja", BusinessType.Ecommerce);
+        var result = User.Create("user@test.com", "Jo\u00e3o", "Minha Loja", BusinessType.Ecommerce, verificationToken: DefaultToken);
 
         // Assert
         result.Value.DomainEvents.Should().ContainSingle()
@@ -81,13 +98,28 @@ public sealed class UserTests
     }
 
     [Fact]
-    public void Create_WithExternalAuthId_SetsExternalAuthId()
+    public void Create_WithExternalAuthId_SetsExternalAuthIdAndVerifiesEmail()
     {
         // Act
-        var result = User.Create("user@test.com", "João", "Minha Loja", BusinessType.Ecommerce, "google|123");
+        var result = User.Create("user@test.com", "Jo\u00e3o", "Minha Loja", BusinessType.Ecommerce, "google|123");
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         result.Value.ExternalAuthId.Should().Be("google|123");
+        result.Value.IsEmailVerified.Should().BeTrue();
+        result.Value.VerificationToken.Should().BeNull();
+        result.Value.VerificationTokenExpiresAt.Should().BeNull();
+    }
+
+    [Fact]
+    public void Create_WithoutExternalAuthId_AndWithoutToken_ReturnsValidationError()
+    {
+        // Act
+        var result = User.Create("user@test.com", "Jo\u00e3o", "Minha Loja", BusinessType.Ecommerce);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("User.VerificationTokenRequired");
     }
 
     // ── AddIntegration ──────────────────────────────────────
@@ -96,7 +128,7 @@ public sealed class UserTests
     public void AddIntegration_FreePlan_FirstIntegration_Succeeds()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.ClearDomainEvents();
         var encryptor = CreateEncryptor();
 
@@ -113,7 +145,7 @@ public sealed class UserTests
     public void AddIntegration_FreePlan_SecondIntegration_ReturnsFailure()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         var encryptor = CreateEncryptor();
         user.AddIntegration(IntegrationProvider.GoogleAnalytics4, "t1", "r1", "acc1", null, encryptor);
 
@@ -129,7 +161,7 @@ public sealed class UserTests
     public void AddIntegration_ProPlan_UpToThreeIntegrations_Succeeds()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.UpgradePlan(PlanType.Pro);
         var encryptor = CreateEncryptor();
 
@@ -149,7 +181,7 @@ public sealed class UserTests
     public void AddIntegration_DuplicateProvider_ReturnsConflict()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.UpgradePlan(PlanType.Pro);
         var encryptor = CreateEncryptor();
         user.AddIntegration(IntegrationProvider.GoogleAnalytics4, "t1", "r1", "acc1", null, encryptor);
@@ -168,7 +200,7 @@ public sealed class UserTests
     public void RemoveIntegration_Existing_DisconnectsSuccessfully()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         var encryptor = CreateEncryptor();
         user.AddIntegration(IntegrationProvider.GoogleAnalytics4, "t1", "r1", "acc1", null, encryptor);
         user.ClearDomainEvents();
@@ -185,7 +217,7 @@ public sealed class UserTests
     public void RemoveIntegration_NotFound_ReturnsFailure()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
 
         // Act
         var result = user.RemoveIntegration(IntegrationProvider.Stripe);
@@ -201,7 +233,7 @@ public sealed class UserTests
     public void UpgradePlan_FreeToProSucceeds()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.ClearDomainEvents();
 
         // Act
@@ -217,7 +249,7 @@ public sealed class UserTests
     public void UpgradePlan_ProToFree_ReturnsFailure()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.UpgradePlan(PlanType.Pro);
 
         // Act
@@ -232,7 +264,7 @@ public sealed class UserTests
     public void UpgradePlan_SamePlan_ReturnsFailure()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
 
         // Act
         var result = user.UpgradePlan(PlanType.Free);
@@ -247,7 +279,7 @@ public sealed class UserTests
     public void SetPlanFromWebhook_WhenPlanAlreadySame_DoesNotRaiseEvent()
     {
         // Arrange
-        var user = User.Create("a@b.com", "N", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser(email: "a@b.com", name: "N");
         user.SetPlanFromWebhook(PlanType.Pro);
         user.ClearDomainEvents();
 
@@ -262,7 +294,7 @@ public sealed class UserTests
     public void SetPlanFromWebhook_WhenDowngradeToFree_EmitsUserPlanChangedEvent()
     {
         // Arrange
-        var user = User.Create("a@b.com", "N", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser(email: "a@b.com", name: "N");
         user.SetPlanFromWebhook(PlanType.Pro);
         user.ClearDomainEvents();
 
@@ -283,7 +315,7 @@ public sealed class UserTests
     public void VerifyEmail_WithValidToken_SetsIsEmailVerifiedAndRaisesEvent()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         var token = Guid.NewGuid().ToString("N");
         user.SetVerificationToken(token);
         user.ClearDomainEvents();
@@ -295,6 +327,7 @@ public sealed class UserTests
         result.IsSuccess.Should().BeTrue();
         user.IsEmailVerified.Should().BeTrue();
         user.VerificationToken.Should().BeNull();
+        user.VerificationTokenExpiresAt.Should().BeNull();
         user.DomainEvents.Should().ContainSingle().Which.Should().BeOfType<UserEmailVerifiedEvent>();
     }
 
@@ -302,7 +335,7 @@ public sealed class UserTests
     public void VerifyEmail_WithInvalidToken_ReturnsFailure()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.SetVerificationToken("valid-token");
 
         // Act
@@ -317,7 +350,7 @@ public sealed class UserTests
     public void VerifyEmail_WhenAlreadyVerified_ReturnsFailure()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         var token = Guid.NewGuid().ToString("N");
         user.SetVerificationToken(token);
         user.VerifyEmail(token);
@@ -329,13 +362,29 @@ public sealed class UserTests
         result.IsFailure.Should().BeTrue();
     }
 
+    [Fact]
+    public void VerifyEmail_WhenTokenExpired_ReturnsTokenExpiredError()
+    {
+        // Arrange
+        var user = CreateUser();
+        var token = Guid.NewGuid().ToString("N");
+        user.SetVerificationTokenWithExpiry(token, DateTime.UtcNow.AddHours(-1));
+
+        // Act
+        var result = user.VerifyEmail(token);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("User.VerificationTokenExpired");
+    }
+
     // ── Capability checks ───────────────────────────────────
 
     [Fact]
     public void CanAccessDemographics_Free_ReturnsFalse()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
 
         // Act & Assert
         user.CanAccessDemographics().Should().BeFalse();
@@ -345,7 +394,7 @@ public sealed class UserTests
     public void CanAccessDemographics_Pro_ReturnsTrue()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.UpgradePlan(PlanType.Pro);
 
         // Act & Assert
@@ -356,7 +405,7 @@ public sealed class UserTests
     public void CanAccessWhatsApp_ProPlan_ReturnsFalse()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.UpgradePlan(PlanType.Pro);
 
         // Act & Assert
@@ -367,7 +416,7 @@ public sealed class UserTests
     public void CanAccessWhatsApp_BusinessPlan_ReturnsTrue()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.UpgradePlan(PlanType.Pro);
         user.UpgradePlan(PlanType.Business);
 
@@ -379,7 +428,7 @@ public sealed class UserTests
     public void CanAccessInsights_FreePlan_ReturnsFalse()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
 
         // Act & Assert
         user.CanAccessInsights().Should().BeFalse();
@@ -389,7 +438,7 @@ public sealed class UserTests
     public void CanAccessInsights_ProPlan_ReturnsTrue()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.UpgradePlan(PlanType.Pro);
 
         // Act & Assert
@@ -402,7 +451,7 @@ public sealed class UserTests
     public void SetPhoneNumber_ValidNumber_SetsPhoneNumber()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
 
         // Act
         user.SetPhoneNumber("+5511999999999");
@@ -415,7 +464,7 @@ public sealed class UserTests
     public void SetPhoneNumber_Null_ClearsPhoneNumber()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         user.SetPhoneNumber("+5511999999999");
 
         // Act
@@ -431,7 +480,7 @@ public sealed class UserTests
     public void UpdateProfile_ValidData_UpdatesFields()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja Antiga", BusinessType.Ecommerce).Value;
+        var user = CreateUser(businessName: "Loja Antiga");
 
         // Act
         var result = user.UpdateProfile("Maria", "Loja Nova", BusinessType.Services);
@@ -446,7 +495,7 @@ public sealed class UserTests
     public void UpdateProfile_EmptyName_ReturnsFailure()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
 
         // Act
         var result = user.UpdateProfile("  ", "Loja", BusinessType.Ecommerce);
@@ -462,7 +511,7 @@ public sealed class UserTests
     public void Deactivate_SetsIsActiveFalse()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
 
         // Act
         user.Deactivate();
@@ -477,7 +526,7 @@ public sealed class UserTests
     public void AddIntegration_AfterDisconnect_AllowsReconnect()
     {
         // Arrange
-        var user = User.Create("user@test.com", "João", "Loja", BusinessType.Ecommerce).Value;
+        var user = CreateUser();
         var encryptor = CreateEncryptor();
         user.AddIntegration(IntegrationProvider.GoogleAnalytics4, "t1", "r1", "acc1", null, encryptor);
         user.RemoveIntegration(IntegrationProvider.GoogleAnalytics4);

@@ -14,9 +14,16 @@ internal sealed class CapturingLogger<T> : ILogger<T>
 
     public bool HasEntry(LogLevel level) => _entries.Any(e => e.Level == level);
 
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+        => NullScope.Instance;
 
     public bool IsEnabled(LogLevel logLevel) => true;
+
+    private sealed class NullScope : IDisposable
+    {
+        public static readonly NullScope Instance = new();
+        public void Dispose() { }
+    }
 
     public void Log<TState>(
         LogLevel logLevel,

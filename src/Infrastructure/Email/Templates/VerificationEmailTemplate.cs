@@ -18,6 +18,7 @@ internal static class VerificationEmailTemplate
     internal static string Build(string recipientName, string token)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        var safeName = System.Net.WebUtility.HtmlEncode(recipientName);
         var encodedToken = Uri.EscapeDataString(token);
 
         return $"""
@@ -33,7 +34,7 @@ internal static class VerificationEmailTemplate
         <div class="container">
           <div class="header">
             <h1>Confirme seu email</h1>
-            <p>Olá, <strong>{recipientName}</strong>! Só mais um passo para ativar sua conta.</p>
+            <p>Olá, <strong>{safeName}</strong>! Só mais um passo para ativar sua conta.</p>
           </div>
           <div class="body">
             <p>Clique no botão abaixo para confirmar seu endereço de email e ativar sua conta WeeklyUp.</p>

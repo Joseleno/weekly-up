@@ -77,6 +77,10 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(64)
             .IsRequired(false);
 
+        builder.Property(u => u.VerificationTokenExpiresAt)
+            .HasColumnName("verification_token_expires_at")
+            .IsRequired(false);
+
         builder.Property(u => u.StripeCustomerId)
             .HasColumnName("stripe_customer_id")
             .HasMaxLength(255)

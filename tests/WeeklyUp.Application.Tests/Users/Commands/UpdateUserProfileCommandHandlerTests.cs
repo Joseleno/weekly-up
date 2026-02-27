@@ -47,7 +47,7 @@ public sealed class UpdateUserProfileCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var command = new UpdateUserProfileCommand(userId, "Updated Name", "Updated Business", BusinessType.Services);
-        var user = User.Create("test@example.com", "Original Name", "Original Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Original Name", "Original Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         _users.GetByIdAsync(userId, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act

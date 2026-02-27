@@ -31,7 +31,7 @@ public sealed class TokenRefreshJobTests
         var encryptor = Substitute.For<ITokenEncryptor>();
         encryptor.Encrypt(Arg.Any<string>()).Returns("encrypted");
 
-        var userResult = User.Create("owner@test.com", "Owner", "Business", BusinessType.Ecommerce);
+        var userResult = User.Create("owner@test.com", "Owner", "Business", BusinessType.Ecommerce, verificationToken: "test-token");
         var user = userResult.Value;
         user.AddIntegration(
             IntegrationProvider.GoogleAnalytics4,

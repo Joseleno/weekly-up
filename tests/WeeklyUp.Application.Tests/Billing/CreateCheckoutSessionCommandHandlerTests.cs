@@ -59,7 +59,7 @@ public sealed class CreateCheckoutSessionCommandHandlerTests
     public async Task Handle_WhenUserHasNoStripeId_CreatesCustomerThenReturnsUrl()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         var command = new CreateCheckoutSessionCommand(
             user.Id, PlanType.Pro, "https://success.test", "https://cancel.test");
 
@@ -87,7 +87,7 @@ public sealed class CreateCheckoutSessionCommandHandlerTests
     public async Task Handle_WhenUserHasStripeId_SkipsCustomerCreationAndReturnsUrl()
     {
         // Arrange
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         user.SetStripeCustomerId("cus_existing456");
 
         var command = new CreateCheckoutSessionCommand(
