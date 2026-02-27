@@ -33,18 +33,30 @@ public sealed class ResendEmailSender : IEmailSender
     }
 
     public async Task<Result<bool>> SendWeeklyReportAsync(
-        string recipientEmail, string recipientName, Report report, CancellationToken ct = default)
+        string recipientEmail, string recipientName, Report report, CancellationToken cancellationToken = default)
     {
         var html = WeeklyReportEmailTemplate.Build(recipientName, report);
         var subject = $"Seu Relatorio Semanal - {report.WeekRange}";
-        return await SendEmailAsync(recipientEmail, subject, html, ct);
+        return await SendEmailAsync(recipientEmail, subject, html, cancellationToken);
     }
 
     public async Task<Result<bool>> SendWelcomeAsync(
-        string recipientEmail, string recipientName, CancellationToken ct = default)
+        string recipientEmail, string recipientName, CancellationToken cancellationToken = default)
     {
         var html = WelcomeEmailTemplate.Build(recipientName);
-        return await SendEmailAsync(recipientEmail, "Bem-vindo ao WeeklyUp!", html, ct);
+        return await SendEmailAsync(recipientEmail, "Bem-vindo ao WeeklyUp!", html, cancellationToken);
+    }
+
+    public async Task<Result<bool>> SendVerificationEmailAsync(
+        string recipientEmail, string recipientName, string token, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return AppError.Validation("Email.InvalidToken", "Token de verificacao nao pode ser vazio.");
+        }
+
+        var html = VerificationEmailTemplate.Build(recipientName, token);
+        return await SendEmailAsync(recipientEmail, "Confirme seu email - WeeklyUp", html, cancellationToken);
     }
 
     private async Task<Result<bool>> SendEmailAsync(

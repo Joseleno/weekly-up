@@ -1,6 +1,6 @@
 namespace WeeklyUp.Infrastructure.Email.Templates;
 
-public static class WelcomeEmailTemplate
+internal static class WelcomeEmailTemplate
 {
     private const string IntegrationsUrl = "https://weeklyup.app/integrations";
     private const string DashboardUrl = "https://weeklyup.app/dashboard";
@@ -20,7 +20,7 @@ public static class WelcomeEmailTemplate
         ".btn{display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600}" +
         ".footer{padding:24px 32px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #f1f5f9}";
 
-    public static string Build(string recipientName) =>
+    internal static string Build(string recipientName) =>
         $"""
         <!DOCTYPE html>
         <html lang="pt-BR">

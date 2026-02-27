@@ -35,7 +35,8 @@ public sealed class User : AggregateRoot
         string name,
         string businessName,
         BusinessType businessType,
-        string? externalAuthId = null)
+        string? externalAuthId = null,
+        string? verificationToken = null)
     {
         Result<Email> emailResult = Email.Create(email);
         if (emailResult.IsFailure)
@@ -64,9 +65,10 @@ public sealed class User : AggregateRoot
             IsActive = true,
             IsEmailVerified = false,
             ExternalAuthId = externalAuthId,
+            VerificationToken = verificationToken,
         };
 
-        user.RaiseDomainEvent(new UserRegisteredEvent(user.Id, user.Email.Value));
+        user.RaiseDomainEvent(new UserRegisteredEvent(user.Id, user.Email.Value, user.Name, verificationToken));
         return user;
     }
 

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
+using WeeklyUp.Application.Common.Notifications;
 using WeeklyUp.Domain.Common;
 
 namespace WeeklyUp.Infrastructure.Persistence.Interceptors;
