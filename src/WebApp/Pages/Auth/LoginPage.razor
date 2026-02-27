@@ -89,6 +89,21 @@
     private bool _showPassword;
     private string? _errorMessage;
 
+    private string GetSafeReturnUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl))
+            return "/";
+
+        if (Uri.TryCreate(ReturnUrl, UriKind.Relative, out _))
+            return ReturnUrl;
+
+        if (Uri.TryCreate(ReturnUrl, UriKind.Absolute, out var absolute)
+            && absolute.Host == new Uri(Navigation.BaseUri).Host)
+            return ReturnUrl;
+
+        return "/";
+    }
+
     [SupplyParameterFromQuery(Name = "returnUrl")]
     private string? ReturnUrl { get; set; }
 
@@ -108,7 +123,7 @@
             }
 
             await AuthService.SetTokenAsync(response.Token, response.ExpiresAt);
-            Navigation.NavigateTo(ReturnUrl ?? "/");
+            Navigation.NavigateTo(GetSafeReturnUrl());
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {

@@ -37,7 +37,7 @@
                                Adornment="Adornment.Start"
                                AdornmentIcon="@Icons.Material.Filled.Category"
                                Required="true">
-                        @foreach (var type in _businessTypes)
+                        @foreach (var type in BusinessTypeOptions.All)
                         {
                             <MudSelectItem Value="@type.Value">@type.Label</MudSelectItem>
                         }
@@ -156,17 +156,6 @@
     private int _reportHour = 8;
     private bool _saving;
 
-    private static readonly (string Value, string Label)[] _businessTypes =
-    [
-        ("Ecommerce", "E-commerce"),
-        ("Services", "Serviços"),
-        ("Food", "Alimentação"),
-        ("Retail", "Varejo físico"),
-        ("Education", "Educação"),
-        ("Health", "Saúde e Bem-estar"),
-        ("Other", "Outro"),
-    ];
-
     private static readonly (int Value, string Label)[] _reportHours =
     [
         (7, "07:00"),
@@ -183,7 +172,7 @@
 
         try
         {
-            if (!string.IsNullOrWhiteSpace(_businessName) || !string.IsNullOrWhiteSpace(_businessType))
+            if (!string.IsNullOrWhiteSpace(_businessName) && !string.IsNullOrWhiteSpace(_businessType))
             {
                 await ApiClient.UpdateProfileAsync(new UpdateProfileRequest(
                     _businessName,

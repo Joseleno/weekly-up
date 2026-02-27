@@ -1,0 +1,14 @@
+@* Spinner centralizado para estados de carregamento *@
+
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="min-height: 200px">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">@Message</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public string? Message { get; set; }
+}

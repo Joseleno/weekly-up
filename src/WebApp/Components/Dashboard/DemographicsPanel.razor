@@ -1,0 +1,48 @@
+@* Painel com faixas etárias e top cidades *@
+
+<MudStack Spacing="3">
+    <MudText Typo="Typo.subtitle1"><b>Perfil do público</b></MudText>
+
+    @if (Demographics.AgeGroups.Count > 0)
+    {
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Faixas etárias</MudText>
+            @foreach (var group in Demographics.AgeGroups)
+            {
+                <MudStack Spacing="1">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween">
+                        <MudText Typo="Typo.caption">@group.Range</MudText>
+                        <MudText Typo="Typo.caption">@group.Percentage.ToString("0")%</MudText>
+                    </MudStack>
+                    <MudProgressLinear Value="(double)group.Percentage"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       Rounded="true" />
+                </MudStack>
+            }
+        </MudStack>
+    }
+
+    @if (Demographics.TopCities.Count > 0)
+    {
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Top cidades</MudText>
+            @for (int i = 0; i < Demographics.TopCities.Count; i++)
+            {
+                int rank = i + 1;
+                string city = Demographics.TopCities[i];
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudAvatar Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                        <MudText Typo="Typo.caption">@rank</MudText>
+                    </MudAvatar>
+                    <MudText Typo="Typo.body2">@city</MudText>
+                </MudStack>
+            }
+        </MudStack>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public DemographicsResponse Demographics { get; set; } = null!;
+}

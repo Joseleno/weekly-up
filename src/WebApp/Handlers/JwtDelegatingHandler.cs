@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 
 using WeeklyUp.WebApp.Services;
@@ -17,6 +18,13 @@ public sealed class JwtDelegatingHandler(AuthService authService) : DelegatingHa
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        return await base.SendAsync(request, cancellationToken);
+        var response = await base.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            await authService.LogoutAsync();
+        }
+
+        return response;
     }
 }

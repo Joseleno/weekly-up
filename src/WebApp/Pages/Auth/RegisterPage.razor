@@ -67,7 +67,7 @@
                            AdornmentIcon="@Icons.Material.Filled.Category"
                            Disabled="_loading"
                            Required="true">
-                    @foreach (var type in BusinessTypes)
+                    @foreach (var type in BusinessTypeOptions.All)
                     {
                         <MudSelectItem Value="@type.Value">@type.Label</MudSelectItem>
                     }
@@ -119,17 +119,6 @@
         public string BusinessName { get; set; } = string.Empty;
         public string BusinessType { get; set; } = string.Empty;
     }
-
-    private static readonly (string Value, string Label)[] BusinessTypes =
-    [
-        ("Ecommerce", "E-commerce"),
-        ("Services", "Serviços"),
-        ("Food", "Alimentação"),
-        ("Retail", "Varejo físico"),
-        ("Education", "Educação"),
-        ("Health", "Saúde e Bem-estar"),
-        ("Other", "Outro"),
-    ];
 
     private readonly RegisterFormModel _model = new();
     private bool _loading;

@@ -10,28 +10,35 @@ namespace WeeklyUp.WebApp.Services;
 public sealed class JwtAuthenticationStateProvider(ILocalStorageService localStorage)
     : AuthenticationStateProvider
 {
-    private const string TokenKey = "auth_token";
-
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var token = await localStorage.GetItemAsStringAsync(TokenKey);
+        var expiry = await localStorage.GetItemAsStringAsync(AuthConstants.TokenExpiryKey);
+
+        if (expiry is not null && DateTimeOffset.TryParse(expiry, out var expiresAt)
+            && expiresAt <= DateTimeOffset.UtcNow)
+        {
+            return Anonymous();
+        }
+
+        var token = await localStorage.GetItemAsStringAsync(AuthConstants.TokenKey);
 
         if (string.IsNullOrWhiteSpace(token))
         {
-            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+            return Anonymous();
         }
 
         var claims = ParseClaimsFromJwt(token);
         var identity = new ClaimsIdentity(claims, "jwt");
-        var user = new ClaimsPrincipal(identity);
-
-        return new AuthenticationState(user);
+        return new AuthenticationState(new ClaimsPrincipal(identity));
     }
 
     public void NotifyAuthStateChanged()
     {
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
+
+    private static AuthenticationState Anonymous() =>
+        new(new ClaimsPrincipal(new ClaimsIdentity()));
 
     private static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
     {

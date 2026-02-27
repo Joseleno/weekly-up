@@ -1,0 +1,53 @@
+@* Exibe os três insights de IA (Highlight, Alert, Tip) *@
+
+<MudStack Spacing="3">
+    <MudText Typo="Typo.subtitle1"><b>Insights da semana</b></MudText>
+
+    <MudCard Elevation="1" Style="border-left: 4px solid var(--mud-palette-success)">
+        <MudCardContent Class="py-3">
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+                         Color="Color.Success" Size="Size.Small" Class="mt-1" />
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.caption" Color="Color.Success"><b>DESTAQUE</b></MudText>
+                    <MudText Typo="Typo.body2">@Insights.Highlight</MudText>
+                </MudStack>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    <MudCard Elevation="1" Style="border-left: 4px solid var(--mud-palette-warning)">
+        <MudCardContent Class="py-3">
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.Warning"
+                         Color="Color.Warning" Size="Size.Small" Class="mt-1" />
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.caption" Color="Color.Warning"><b>ATENÇÃO</b></MudText>
+                    <MudText Typo="Typo.body2">@Insights.Alert</MudText>
+                </MudStack>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    <MudCard Elevation="1" Style="border-left: 4px solid var(--mud-palette-info)">
+        <MudCardContent Class="py-3">
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.Lightbulb"
+                         Color="Color.Info" Size="Size.Small" Class="mt-1" />
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.caption" Color="Color.Info"><b>DICA</b></MudText>
+                    <MudText Typo="Typo.body2">@Insights.Tip</MudText>
+                </MudStack>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    <MudText Typo="Typo.caption" Color="Color.Secondary">
+        Gerado em @Insights.GeneratedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+    </MudText>
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public InsightsResponse Insights { get; set; } = null!;
+}

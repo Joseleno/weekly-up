@@ -8,12 +8,9 @@ public sealed class AuthService(
     ILocalStorageService localStorage,
     AuthenticationStateProvider authStateProvider)
 {
-    private const string TokenKey = "auth_token";
-    private const string TokenExpiryKey = "auth_token_expiry";
-
     public async Task<string?> GetTokenAsync()
     {
-        var expiry = await localStorage.GetItemAsStringAsync(TokenExpiryKey);
+        var expiry = await localStorage.GetItemAsStringAsync(AuthConstants.TokenExpiryKey);
 
         if (expiry is not null && DateTimeOffset.TryParse(expiry, out var expiresAt)
             && expiresAt <= DateTimeOffset.UtcNow)
@@ -22,25 +19,25 @@ public sealed class AuthService(
             return null;
         }
 
-        return await localStorage.GetItemAsStringAsync(TokenKey);
+        return await localStorage.GetItemAsStringAsync(AuthConstants.TokenKey);
     }
 
     public async Task SetTokenAsync(string token, DateTimeOffset expiresAt)
     {
-        await localStorage.SetItemAsStringAsync(TokenKey, token);
-        await localStorage.SetItemAsStringAsync(TokenExpiryKey, expiresAt.ToString("O"));
-
-        if (authStateProvider is JwtAuthenticationStateProvider jwtProvider)
-        {
-            jwtProvider.NotifyAuthStateChanged();
-        }
+        await localStorage.SetItemAsStringAsync(AuthConstants.TokenKey, token);
+        await localStorage.SetItemAsStringAsync(AuthConstants.TokenExpiryKey, expiresAt.ToString("O"));
+        NotifyAuthStateChanged();
     }
 
     public async Task LogoutAsync()
     {
-        await localStorage.RemoveItemAsync(TokenKey);
-        await localStorage.RemoveItemAsync(TokenExpiryKey);
+        await localStorage.RemoveItemAsync(AuthConstants.TokenKey);
+        await localStorage.RemoveItemAsync(AuthConstants.TokenExpiryKey);
+        NotifyAuthStateChanged();
+    }
 
+    private void NotifyAuthStateChanged()
+    {
         if (authStateProvider is JwtAuthenticationStateProvider jwtProvider)
         {
             jwtProvider.NotifyAuthStateChanged();

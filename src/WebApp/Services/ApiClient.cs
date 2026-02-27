@@ -11,7 +11,7 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
         CancellationToken ct = default)
     {
         var response = await httpClient.PostAsJsonAsync("api/auth/login", request, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
         return await response.Content.ReadFromJsonAsync<AuthTokenResponse>(ct);
     }
 
@@ -20,7 +20,7 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
         CancellationToken ct = default)
     {
         var response = await httpClient.PostAsJsonAsync("api/auth/register", request, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
         return await response.Content.ReadFromJsonAsync<AuthTokenResponse>(ct);
     }
 
@@ -73,7 +73,7 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
             "api/billing/checkout",
             new { Plan = plan },
             ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
         return await response.Content.ReadFromJsonAsync<CheckoutSessionResponse>(ct);
     }
 
@@ -81,7 +81,7 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
         CancellationToken ct = default)
     {
         var response = await httpClient.PostAsync("api/billing/portal", null, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
         return await response.Content.ReadFromJsonAsync<BillingPortalSessionResponse>(ct);
     }
 
@@ -90,7 +90,7 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
         CancellationToken ct = default)
     {
         var response = await httpClient.PutAsJsonAsync("api/users/profile", request, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
     }
 
     public async Task UpdateReportPreferencesAsync(
@@ -98,6 +98,19 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
         CancellationToken ct = default)
     {
         var response = await httpClient.PutAsJsonAsync("api/reports/preferences", request, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
+    private static async Task EnsureSuccessOrThrowAsync(
+        HttpResponseMessage response,
+        CancellationToken ct)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var body = await response.Content.ReadAsStringAsync(ct);
+        throw new HttpRequestException(body, null, response.StatusCode);
     }
 }

@@ -1,6 +1,7 @@
 @page "/verify-email"
 @layout EmptyLayout
 @attribute [AllowAnonymous]
+@implements IDisposable
 
 @inject IApiClient ApiClient
 @inject NavigationManager Navigation
@@ -47,6 +48,7 @@
 
     private bool _loading = true;
     private bool _success;
+    private readonly CancellationTokenSource _cts = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,8 +73,14 @@
 
         if (_success)
         {
-            await Task.Delay(2500);
-            Navigation.NavigateTo("/");
+            try
+            {
+                await Task.Delay(2500, _cts.Token);
+                Navigation.NavigateTo("/");
+            }
+            catch (OperationCanceledException) { /* navegado antes do redirect */ }
         }
     }
+
+    public void Dispose() => _cts.Cancel();
 }

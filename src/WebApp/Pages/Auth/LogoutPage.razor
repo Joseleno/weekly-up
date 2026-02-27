@@ -4,6 +4,13 @@
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
+<MudContainer MaxWidth="MaxWidth.ExtraSmall" Class="py-16">
+    <MudStack AlignItems="AlignItems.Center" Spacing="3">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Saindo...</MudText>
+    </MudStack>
+</MudContainer>
+
 @code {
     protected override async Task OnInitializedAsync()
     {
