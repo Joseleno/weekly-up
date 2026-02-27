@@ -70,6 +70,6 @@ public sealed class GenerateWeeklyReportCommandHandlerTests
         result.Value.Should().BeTrue();
         await _reports.Received(1).AddAsync(Arg.Any<Report>(), Arg.Any<CancellationToken>());
         await _uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-        _jobScheduler.Received(1).ScheduleReportSending(Arg.Any<Guid>());
+        _jobScheduler.Received(1).ScheduleDataGeneration(Arg.Any<Guid>());
     }
 }

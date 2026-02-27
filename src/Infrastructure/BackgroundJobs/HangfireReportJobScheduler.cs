@@ -18,4 +18,10 @@ public sealed class HangfireReportJobScheduler : IReportJobScheduler
         _jobClient.Enqueue<ReportSendingJob>(
             j => j.ExecuteAsync(reportId, CancellationToken.None));
     }
+
+    public void ScheduleDataGeneration(Guid reportId)
+    {
+        _jobClient.Enqueue<ReportDataGenerationJob>(
+            j => j.ExecuteAsync(reportId, CancellationToken.None));
+    }
 }

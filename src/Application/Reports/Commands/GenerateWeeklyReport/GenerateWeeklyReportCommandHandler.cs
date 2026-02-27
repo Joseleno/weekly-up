@@ -54,7 +54,7 @@ public sealed class GenerateWeeklyReportCommandHandler
         await _uow.Reports.AddAsync(report, cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
 
-        _jobScheduler.ScheduleReportSending(report.Id);
+        _jobScheduler.ScheduleDataGeneration(report.Id);
 
         return true;
     }

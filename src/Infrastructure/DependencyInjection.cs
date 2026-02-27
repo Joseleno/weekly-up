@@ -218,6 +218,7 @@ public static class InfrastructureServiceExtensions
         services.AddHangfireServer();
 
         services.AddScoped<WeeklyReportGenerationJob>();
+        services.AddScoped<ReportDataGenerationJob>();
         services.AddScoped<ReportSendingJob>();
         services.AddScoped<IntegrationSyncJob>();
         services.AddScoped<TokenRefreshJob>();
