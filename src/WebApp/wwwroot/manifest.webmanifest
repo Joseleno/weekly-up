@@ -1,16 +1,28 @@
 {
-  "name": "WeeklyUp",
+  "name": "WeeklyUp — Relatórios Semanais",
   "short_name": "WeeklyUp",
+  "description": "Relatórios semanais automáticos para pequenos negócios",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#1E88E5",
   "prefer_related_applications": false,
   "icons": [
     {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
       "src": "icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "categories": ["business", "productivity"]
 }

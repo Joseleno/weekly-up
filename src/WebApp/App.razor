@@ -1,3 +1,5 @@
+@inject ILocalStorageService LocalStorage
+
 <MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
@@ -15,11 +17,23 @@
                 <FocusOnNavigate RouteData="routeData" Selector="h1" />
             </Found>
             <NotFound>
-                <PageTitle>Not Found</PageTitle>
+                <PageTitle>Página não encontrada — WeeklyUp</PageTitle>
                 <LayoutView Layout="typeof(MainLayout)">
-                    <MudText Typo="Typo.h4" Class="mt-8" Align="Align.Center">
-                        Página não encontrada
-                    </MudText>
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="4" Class="py-16">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff"
+                                 Style="font-size: 5rem;"
+                                 Color="Color.Secondary" />
+                        <MudText Typo="Typo.h4" Align="Align.Center"><b>Página não encontrada</b></MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
+                            A página que você procura não existe ou foi movida.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Href="/"
+                                   StartIcon="@Icons.Material.Filled.Home">
+                            Voltar ao início
+                        </MudButton>
+                    </MudStack>
                 </LayoutView>
             </NotFound>
         </Router>
@@ -44,5 +58,16 @@
 
     private bool _isDarkMode;
 
-    private void SetDarkMode(bool isDark) => _isDarkMode = isDark;
+    protected override async Task OnInitializedAsync()
+    {
+        var saved = await LocalStorage.GetItemAsync<bool>("weeklyup_dark_mode");
+        _isDarkMode = saved;
+    }
+
+    private async void SetDarkMode(bool isDark)
+    {
+        _isDarkMode = isDark;
+        await LocalStorage.SetItemAsync("weeklyup_dark_mode", isDark);
+        StateHasChanged();
+    }
 }

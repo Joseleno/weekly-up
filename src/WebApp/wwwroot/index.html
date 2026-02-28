@@ -12,20 +12,26 @@
     <link href="WeeklyUp.WebApp.styles.css" rel="stylesheet" />
     <link href="manifest.webmanifest" rel="manifest" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="WeeklyUp" />
+    <meta name="theme-color" content="#1E88E5" />
+    <meta name="description" content="Relatórios semanais automáticos para pequenos negócios" />
 </head>
 
 <body>
     <div id="app">
-        <div style="display:flex;justify-content:center;align-items:center;height:100vh;">
-            <span>Carregando...</span>
+        <div class="app-loading">
+            <div class="app-loading-spinner"></div>
+            <p class="app-loading-text">Carregando WeeklyUp...</p>
         </div>
     </div>
 
-    <div id="blazor-error-ui"
-         style="background:#ffdc00;bottom:0;box-shadow:0 -1px 2px rgba(0,0,0,0.2);display:none;left:0;padding:0.6rem 1.25rem 0.7rem;position:fixed;width:100%;z-index:1000;">
+    <div id="blazor-error-ui">
         Um erro inesperado ocorreu.
         <a href="" class="reload">Recarregar</a>
-        <a class="dismiss" style="cursor:pointer;">Fechar</a>
+        <a class="dismiss">Fechar</a>
     </div>
 
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
