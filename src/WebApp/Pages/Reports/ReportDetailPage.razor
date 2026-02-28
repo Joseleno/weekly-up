@@ -1,0 +1,161 @@
+@page "/reports/{ReportId:guid}"
+@attribute [Authorize]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Relatório — WeeklyUp</PageTitle>
+
+@if (_loading)
+{
+    <LoadingSpinner Message="Carregando relatório..." />
+}
+else if (_error is not null)
+{
+    <ErrorAlert Message="@_error" OnRetry="LoadAsync" />
+}
+else if (_report is not null)
+{
+    <MudStack Spacing="4">
+        @* Header *@
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="@(() => Navigation.NavigateTo("/reports"))"
+                           Color="Color.Default" />
+            <MudStack Spacing="0">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudText Typo="Typo.h5"><b>@_report.WeekLabel</b></MudText>
+                    <ReportStatusChip Status="@_report.Status" />
+                </MudStack>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Gerado em @_report.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                </MudText>
+            </MudStack>
+        </MudStack>
+
+        @if (_report.Status == ReportStatus.Pending)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">
+                Este relatório ainda está sendo gerado. Aguarde alguns minutos e recarregue a página.
+            </MudAlert>
+        }
+        else if (_report.Status == ReportStatus.Failed)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true">
+                Ocorreu um erro ao gerar este relatório. Nossa equipe foi notificada.
+            </MudAlert>
+        }
+
+        @if (_report.Metrics is not null)
+        {
+            @* Métricas *@
+            <MudText Typo="Typo.subtitle1"><b>Métricas da semana</b></MudText>
+            <MudGrid>
+                <MudItem xs="6" sm="6" md="3">
+                    <MetricCard Label="Receita"
+                                Value="@_report.Metrics.Revenue.ToString("C2", AppCultures.PtBr)"
+                                Icon="@Icons.Material.Filled.AttachMoney" />
+                </MudItem>
+                <MudItem xs="6" sm="6" md="3">
+                    <MetricCard Label="Vendas"
+                                Value="@_report.Metrics.SalesCount.ToString()"
+                                SubValue="@($"Ticket médio: {_report.Metrics.AverageTicket.ToString("C2", AppCultures.PtBr)}")"
+                                Icon="@Icons.Material.Filled.ShoppingCart" />
+                </MudItem>
+                <MudItem xs="6" sm="6" md="3">
+                    <MetricCard Label="Novos clientes"
+                                Value="@_report.Metrics.NewCustomers.ToString()"
+                                Icon="@Icons.Material.Filled.PersonAdd" />
+                </MudItem>
+                <MudItem xs="6" sm="6" md="3">
+                    <MetricCard Label="Visitas"
+                                Value="@_report.Metrics.Visits.ToString("N0")"
+                                SubValue="@($"{_report.Metrics.PageViews:N0} page views")"
+                                Icon="@Icons.Material.Filled.Visibility" />
+                </MudItem>
+            </MudGrid>
+
+            @if (!string.IsNullOrWhiteSpace(_report.Metrics.TopPage)
+                 || !string.IsNullOrWhiteSpace(_report.Metrics.TopSource))
+            {
+                <MudGrid>
+                    @if (!string.IsNullOrWhiteSpace(_report.Metrics.TopPage))
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MetricCard Label="Página mais visitada"
+                                        Value="@_report.Metrics.TopPage"
+                                        Icon="@Icons.Material.Filled.Web" />
+                        </MudItem>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_report.Metrics.TopSource))
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MetricCard Label="Principal fonte de tráfego"
+                                        Value="@_report.Metrics.TopSource"
+                                        Icon="@Icons.Material.Filled.TravelExplore" />
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        }
+
+        @if (_report.Insights is not null || _report.Demographics is not null)
+        {
+            <MudGrid>
+                <MudItem xs="12" md="7">
+                    @if (_report.Insights is not null)
+                    {
+                        <InsightCard Insights="@_report.Insights" />
+                    }
+                </MudItem>
+                <MudItem xs="12" md="5">
+                    @if (_report.Demographics is not null)
+                    {
+                        <DemographicsPanel Demographics="@_report.Demographics" />
+                    }
+                </MudItem>
+            </MudGrid>
+        }
+    </MudStack>
+}
+
+@code {
+    [Parameter] public Guid ReportId { get; set; }
+
+    private readonly CancellationTokenSource _cts = new();
+    private ReportDetailResponse? _report;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _report = await ApiClient.GetReportDetailAsync(ReportId, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante carregamento — ignorar
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _error = "Relatório não encontrado.";
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Não foi possível carregar o relatório. Verifique sua conexão.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

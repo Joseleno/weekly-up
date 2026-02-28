@@ -1,0 +1,24 @@
+@* Chip colorido para status do relatório *@
+
+<MudChip T="string" Size="Size.Small" Color="@_color" Variant="Variant.Filled">
+    @_label
+</MudChip>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Status { get; set; } = string.Empty;
+
+    private Color _color;
+    private string _label = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        (_color, _label) = Status switch
+        {
+            ReportStatus.Completed => (Color.Success, "Concluído"),
+            ReportStatus.Pending   => (Color.Warning, "Pendente"),
+            ReportStatus.Failed    => (Color.Error, "Falhou"),
+            _                     => (Color.Default, Status),
+        };
+    }
+}
