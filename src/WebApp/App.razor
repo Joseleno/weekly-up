@@ -1,6 +1,6 @@
 @inject ILocalStorageService LocalStorage
 
-<MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="_theme" />
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="AppTheme.Default" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -41,21 +41,6 @@
 </CascadingAuthenticationState>
 
 @code {
-    private readonly MudTheme _theme = new()
-    {
-        PaletteLight = new PaletteLight
-        {
-            Primary = "#1E88E5",
-            Secondary = "#FF6F00",
-            AppbarBackground = "#1E88E5",
-        },
-        PaletteDark = new PaletteDark
-        {
-            Primary = "#42A5F5",
-            Secondary = "#FFB74D",
-        },
-    };
-
     private bool _isDarkMode;
 
     protected override async Task OnInitializedAsync()
@@ -67,7 +52,14 @@
     private async void SetDarkMode(bool isDark)
     {
         _isDarkMode = isDark;
-        await LocalStorage.SetItemAsync("weeklyup_dark_mode", isDark);
         StateHasChanged();
+        try
+        {
+            await LocalStorage.SetItemAsync("weeklyup_dark_mode", isDark);
+        }
+        catch
+        {
+            // localStorage indisponível (ex: modo privado restrito) — ignorar
+        }
     }
 }
