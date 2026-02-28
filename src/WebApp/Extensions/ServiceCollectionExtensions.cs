@@ -13,7 +13,6 @@ internal static class ServiceCollectionExtensions
 
         services.AddScoped<JwtDelegatingHandler>();
         services.AddScoped<IApiClient, ApiClient>();
-        services.AddScoped<AuthService>();
 
         services.AddHttpClient("WeeklyUp.Api", client =>
         {

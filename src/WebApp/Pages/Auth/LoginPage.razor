@@ -1,9 +1,10 @@
 @page "/login"
 @layout EmptyLayout
 @attribute [AllowAnonymous]
+@implements IDisposable
 
 @inject IApiClient ApiClient
-@inject AuthService AuthService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
@@ -84,6 +85,7 @@
         public string Password { get; set; } = string.Empty;
     }
 
+    private readonly CancellationTokenSource _cts = new();
     private readonly LoginFormModel _model = new();
     private bool _loading;
     private bool _showPassword;
@@ -114,7 +116,7 @@
 
         try
         {
-            var response = await ApiClient.LoginAsync(new LoginRequest(_model.Email, _model.Password));
+            var response = await ApiClient.LoginAsync(new LoginRequest(_model.Email, _model.Password), _cts.Token);
 
             if (response is null)
             {
@@ -138,4 +140,6 @@
             _loading = false;
         }
     }
+
+    public void Dispose() => _cts.Cancel();
 }

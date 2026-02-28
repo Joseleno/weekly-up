@@ -31,7 +31,9 @@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_content/Blazor-ApexCharts/js/blazor-apexcharts.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
+    <script>navigator.serviceWorker.register('service-worker.js').catch(err => {
+        console.error('Service worker registration failed:', err);
+    });</script>
 </body>
 
 </html>

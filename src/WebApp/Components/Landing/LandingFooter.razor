@@ -12,8 +12,12 @@
                 <MudLink Href="/register" Typo="Typo.body2">Criar conta</MudLink>
             </MudStack>
             <MudText Typo="Typo.caption" Color="Color.Secondary">
-                © @DateTime.UtcNow.Year WeeklyUp. Todos os direitos reservados.
+                © @_currentYear WeeklyUp. Todos os direitos reservados.
             </MudText>
         </MudStack>
     </MudContainer>
 </MudPaper>
+
+@code {
+    private static readonly int _currentYear = DateTime.UtcNow.Year;
+}

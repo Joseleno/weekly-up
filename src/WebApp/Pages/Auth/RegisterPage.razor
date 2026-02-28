@@ -1,9 +1,10 @@
 @page "/register"
 @layout EmptyLayout
 @attribute [AllowAnonymous]
+@implements IDisposable
 
 @inject IApiClient ApiClient
-@inject AuthService AuthService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Criar conta — WeeklyUp</PageTitle>
@@ -120,6 +121,7 @@
         public string BusinessType { get; set; } = string.Empty;
     }
 
+    private readonly CancellationTokenSource _cts = new();
     private readonly RegisterFormModel _model = new();
     private bool _loading;
     private bool _showPassword;
@@ -139,7 +141,7 @@
                 _model.BusinessName,
                 _model.BusinessType);
 
-            var response = await ApiClient.RegisterAsync(request);
+            var response = await ApiClient.RegisterAsync(request, _cts.Token);
 
             if (response is null)
             {
@@ -167,4 +169,6 @@
             _loading = false;
         }
     }
+
+    public void Dispose() => _cts.Cancel();
 }

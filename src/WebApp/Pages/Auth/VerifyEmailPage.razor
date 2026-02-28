@@ -60,7 +60,7 @@
 
         try
         {
-            _success = await ApiClient.VerifyEmailAsync(Token);
+            _success = await ApiClient.VerifyEmailAsync(Token, _cts.Token);
         }
         catch (HttpRequestException)
         {

@@ -26,12 +26,16 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
 
     public async Task<UserProfileResponse?> GetProfileAsync(CancellationToken ct = default)
     {
-        return await httpClient.GetFromJsonAsync<UserProfileResponse>("api/users/profile", ct);
+        var response = await httpClient.GetAsync("api/users/profile", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<UserProfileResponse>(ct);
     }
 
     public async Task<DashboardResponse?> GetDashboardAsync(CancellationToken ct = default)
     {
-        return await httpClient.GetFromJsonAsync<DashboardResponse>("api/users/dashboard", ct);
+        var response = await httpClient.GetAsync("api/users/dashboard", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<DashboardResponse>(ct);
     }
 
     public async Task<PagedListResponse<ReportSummaryResponse>?> GetReportHistoryAsync(
@@ -40,20 +44,26 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
         CancellationToken ct = default)
     {
         var url = $"api/reports?page={page}&pageSize={pageSize}";
-        return await httpClient.GetFromJsonAsync<PagedListResponse<ReportSummaryResponse>>(url, ct);
+        var response = await httpClient.GetAsync(url, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<PagedListResponse<ReportSummaryResponse>>(ct);
     }
 
     public async Task<ReportDetailResponse?> GetReportDetailAsync(
         Guid reportId,
         CancellationToken ct = default)
     {
-        return await httpClient.GetFromJsonAsync<ReportDetailResponse>($"api/reports/{reportId}", ct);
+        var response = await httpClient.GetAsync($"api/reports/{reportId}", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<ReportDetailResponse>(ct);
     }
 
     public async Task<List<IntegrationResponse>?> GetIntegrationsAsync(
         CancellationToken ct = default)
     {
-        return await httpClient.GetFromJsonAsync<List<IntegrationResponse>>("api/integrations", ct);
+        var response = await httpClient.GetAsync("api/integrations", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<List<IntegrationResponse>>(ct);
     }
 
     public async Task<bool> VerifyEmailAsync(string token, CancellationToken ct = default)
@@ -62,7 +72,23 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
             "api/auth/verify-email",
             new { Token = token },
             ct);
-        return response.IsSuccessStatusCode;
+
+        if (response.IsSuccessStatusCode)
+        {
+            return true;
+        }
+
+        // Token inválido ou expirado é resultado esperado (não erro de servidor)
+        if (response.StatusCode is System.Net.HttpStatusCode.BadRequest
+            or System.Net.HttpStatusCode.NotFound
+            or System.Net.HttpStatusCode.UnprocessableEntity)
+        {
+            return false;
+        }
+
+        // Erros de servidor inesperados devem ser propagados
+        await EnsureSuccessOrThrowAsync(response, ct);
+        return false;
     }
 
     public async Task<CheckoutSessionResponse?> CreateCheckoutSessionAsync(

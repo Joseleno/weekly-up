@@ -8,14 +8,17 @@ using Microsoft.AspNetCore.Components.Authorization;
 namespace WeeklyUp.WebApp.Services;
 
 public sealed class JwtAuthenticationStateProvider(ILocalStorageService localStorage)
-    : AuthenticationStateProvider
+    : AuthenticationStateProvider, IAuthStateNotifier
 {
+    // Tolerância de clock skew entre cliente e servidor (mesma constante em AuthService)
+    private static readonly TimeSpan ClockSkewTolerance = TimeSpan.FromSeconds(30);
+
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         var expiry = await localStorage.GetItemAsStringAsync(AuthConstants.TokenExpiryKey);
 
         if (expiry is not null && DateTimeOffset.TryParse(expiry, out var expiresAt)
-            && expiresAt <= DateTimeOffset.UtcNow)
+            && expiresAt <= DateTimeOffset.UtcNow.Add(ClockSkewTolerance))
         {
             return Anonymous();
         }

@@ -5,7 +5,7 @@ using WeeklyUp.WebApp.Services;
 
 namespace WeeklyUp.WebApp.Handlers;
 
-public sealed class JwtDelegatingHandler(AuthService authService) : DelegatingHandler
+public sealed class JwtDelegatingHandler(IAuthService authService) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,

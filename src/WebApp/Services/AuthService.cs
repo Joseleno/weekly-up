@@ -1,19 +1,20 @@
 using Blazored.LocalStorage;
 
-using Microsoft.AspNetCore.Components.Authorization;
-
 namespace WeeklyUp.WebApp.Services;
 
 public sealed class AuthService(
     ILocalStorageService localStorage,
-    AuthenticationStateProvider authStateProvider)
+    IAuthStateNotifier authStateNotifier) : IAuthService
 {
+    // Tolerância de clock skew entre cliente e servidor (mesma constante em JwtAuthenticationStateProvider)
+    private static readonly TimeSpan ClockSkewTolerance = TimeSpan.FromSeconds(30);
+
     public async Task<string?> GetTokenAsync()
     {
         var expiry = await localStorage.GetItemAsStringAsync(AuthConstants.TokenExpiryKey);
 
         if (expiry is not null && DateTimeOffset.TryParse(expiry, out var expiresAt)
-            && expiresAt <= DateTimeOffset.UtcNow)
+            && expiresAt <= DateTimeOffset.UtcNow.Add(ClockSkewTolerance))
         {
             await LogoutAsync();
             return null;
@@ -36,11 +37,5 @@ public sealed class AuthService(
         NotifyAuthStateChanged();
     }
 
-    private void NotifyAuthStateChanged()
-    {
-        if (authStateProvider is JwtAuthenticationStateProvider jwtProvider)
-        {
-            jwtProvider.NotifyAuthStateChanged();
-        }
-    }
+    private void NotifyAuthStateChanged() => authStateNotifier.NotifyAuthStateChanged();
 }

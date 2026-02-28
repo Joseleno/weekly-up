@@ -22,7 +22,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public RenderFragment? ChildContent { get; set; }
+    public RenderFragment ChildContent { get; set; } = default!;
 
     [Parameter]
     public string Message { get; set; } = "Disponível no plano Pro";

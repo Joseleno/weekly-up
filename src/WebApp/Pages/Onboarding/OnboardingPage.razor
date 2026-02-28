@@ -1,5 +1,6 @@
 @page "/onboarding"
 @attribute [Authorize]
+@implements IDisposable
 
 @inject IApiClient ApiClient
 @inject NavigationManager Navigation
@@ -150,6 +151,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
     private MudStepper? _stepper;
     private string _businessName = string.Empty;
     private string _businessType = string.Empty;
@@ -176,14 +178,18 @@
             {
                 await ApiClient.UpdateProfileAsync(new UpdateProfileRequest(
                     _businessName,
-                    _businessType));
+                    _businessType), _cts.Token);
             }
 
             await ApiClient.UpdateReportPreferencesAsync(new UpdateReportPreferencesRequest(
                 _reportHour,
-                DayOfWeek.Monday));
+                DayOfWeek.Monday), _cts.Token);
 
             Navigation.NavigateTo("/");
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante salvamento — ignorar
         }
         catch (HttpRequestException)
         {
@@ -195,4 +201,6 @@
             _saving = false;
         }
     }
+
+    public void Dispose() => _cts.Cancel();
 }
