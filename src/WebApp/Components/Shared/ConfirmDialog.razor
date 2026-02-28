@@ -1,0 +1,36 @@
+@* Dialog genérico de confirmação *@
+
+<MudDialog>
+    <DialogContent>
+        <MudText>@ContentText</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   OnClick="@(() => MudDialog.Cancel())">
+            @CancelText
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="@Color"
+                   OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))">
+            @ConfirmText
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public string ContentText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ConfirmText { get; set; } = "Confirmar";
+
+    [Parameter]
+    public string CancelText { get; set; } = "Cancelar";
+
+    [Parameter]
+    public Color Color { get; set; } = Color.Error;
+}

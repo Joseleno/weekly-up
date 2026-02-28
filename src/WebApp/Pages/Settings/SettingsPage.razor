@@ -1,0 +1,246 @@
+@page "/settings"
+@attribute [Authorize]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Configurações — WeeklyUp</PageTitle>
+
+@if (_loading)
+{
+    <LoadingSpinner Message="Carregando configurações..." />
+}
+else if (_error is not null)
+{
+    <ErrorAlert Message="@_error" OnRetry="LoadAsync" />
+}
+else
+{
+    <MudStack Spacing="4">
+        <MudText Typo="Typo.h5"><b>Configurações</b></MudText>
+
+        <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
+            <MudTabPanel Text="Perfil">
+                <MudStack Spacing="3" Class="pt-4">
+                    <EditForm Model="_profileForm" OnValidSubmit="SaveProfileAsync">
+                        <DataAnnotationsValidator />
+                        <MudStack Spacing="3">
+                            <MudTextField @bind-Value="_profileForm.BusinessName"
+                                          Label="Nome do negócio"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          For="@(() => _profileForm.BusinessName)" />
+
+                            <MudSelect @bind-Value="_profileForm.BusinessType"
+                                       Label="Tipo de negócio"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       For="@(() => _profileForm.BusinessType)">
+                                @foreach (var option in BusinessTypeOptions.All)
+                                {
+                                    <MudSelectItem Value="@option.Value">@option.Label</MudSelectItem>
+                                }
+                            </MudSelect>
+
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Disabled="_savingProfile">
+                                @if (_savingProfile)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <span>Salvando...</span>
+                                }
+                                else
+                                {
+                                    <span>Salvar</span>
+                                }
+                            </MudButton>
+                        </MudStack>
+                    </EditForm>
+                </MudStack>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Relatórios">
+                <MudStack Spacing="3" Class="pt-4">
+                    <EditForm Model="_prefsForm" OnValidSubmit="SavePreferencesAsync">
+                        <MudStack Spacing="3">
+                            <MudSelect @bind-Value="_prefsForm.SendHour"
+                                       Label="Horário de envio"
+                                       Variant="Variant.Outlined">
+                                @foreach (var hour in _reportHours)
+                                {
+                                    <MudSelectItem Value="@hour.Value">@hour.Label</MudSelectItem>
+                                }
+                            </MudSelect>
+
+                            <MudSelect @bind-Value="_prefsForm.SendDayOfWeek"
+                                       Label="Dia da semana"
+                                       Variant="Variant.Outlined">
+                                @foreach (var day in _dayLabels)
+                                {
+                                    <MudSelectItem Value="@day.Key">@day.Value</MudSelectItem>
+                                }
+                            </MudSelect>
+
+                            <MudAlert Severity="Severity.Info" Dense="true">
+                                O relatório será enviado toda semana no horário configurado.
+                            </MudAlert>
+
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Disabled="_savingPrefs">
+                                @if (_savingPrefs)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <span>Salvando...</span>
+                                }
+                                else
+                                {
+                                    <span>Salvar</span>
+                                }
+                            </MudButton>
+                        </MudStack>
+                    </EditForm>
+                </MudStack>
+            </MudTabPanel>
+        </MudTabs>
+    </MudStack>
+}
+
+@code {
+    private sealed class ProfileForm
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string BusinessName { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string BusinessType { get; set; } = string.Empty;
+    }
+
+    private sealed class PrefsForm
+    {
+        public int SendHour { get; set; } = 8;
+        public DayOfWeek SendDayOfWeek { get; set; } = DayOfWeek.Monday;
+    }
+
+    private readonly CancellationTokenSource _cts = new();
+    private UserProfileResponse? _profile;
+    private bool _loading = true;
+    private string? _error;
+    private bool _savingProfile;
+    private bool _savingPrefs;
+    private readonly ProfileForm _profileForm = new();
+    private readonly PrefsForm _prefsForm = new();
+
+    private static readonly Dictionary<DayOfWeek, string> _dayLabels = new()
+    {
+        [DayOfWeek.Sunday] = "Domingo",
+        [DayOfWeek.Monday] = "Segunda-feira",
+        [DayOfWeek.Tuesday] = "Terça-feira",
+        [DayOfWeek.Wednesday] = "Quarta-feira",
+        [DayOfWeek.Thursday] = "Quinta-feira",
+        [DayOfWeek.Friday] = "Sexta-feira",
+        [DayOfWeek.Saturday] = "Sábado",
+    };
+
+    private static readonly (int Value, string Label)[] _reportHours =
+    [
+        (6, "06:00"), (7, "07:00"), (8, "08:00"), (9, "09:00"),
+        (10, "10:00"), (11, "11:00"), (12, "12:00"), (13, "13:00"),
+        (14, "14:00"), (15, "15:00"), (16, "16:00"), (17, "17:00"),
+        (18, "18:00"), (19, "19:00"), (20, "20:00"), (21, "21:00"),
+        (22, "22:00"),
+    ];
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _profile = await ApiClient.GetProfileAsync(_cts.Token);
+
+            if (_profile is not null)
+            {
+                _profileForm.BusinessName = _profile.BusinessName;
+                _profileForm.BusinessType = _profile.BusinessType;
+            }
+
+            // TODO: carregar preferências reais quando GetPreferencesAsync for adicionado ao IApiClient
+            _prefsForm.SendHour = 8;
+            _prefsForm.SendDayOfWeek = DayOfWeek.Monday;
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante carregamento — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Não foi possível carregar as configurações. Verifique sua conexão.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        _savingProfile = true;
+
+        try
+        {
+            await ApiClient.UpdateProfileAsync(
+                new UpdateProfileRequest(_profileForm.BusinessName, _profileForm.BusinessType),
+                _cts.Token);
+
+            Snackbar.Add("Perfil atualizado com sucesso!", Severity.Success);
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante salvamento — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Erro ao salvar o perfil. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            _savingProfile = false;
+        }
+    }
+
+    private async Task SavePreferencesAsync()
+    {
+        _savingPrefs = true;
+
+        try
+        {
+            await ApiClient.UpdateReportPreferencesAsync(
+                new UpdateReportPreferencesRequest(_prefsForm.SendHour, _prefsForm.SendDayOfWeek),
+                _cts.Token);
+
+            Snackbar.Add("Preferências de relatório salvas!", Severity.Success);
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante salvamento — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Erro ao salvar preferências. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            _savingPrefs = false;
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
+}
