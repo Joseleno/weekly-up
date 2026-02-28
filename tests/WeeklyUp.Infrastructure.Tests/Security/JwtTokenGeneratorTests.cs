@@ -32,7 +32,7 @@ public sealed class JwtTokenGeneratorTests
 
     private static User CreateUser()
     {
-        var result = User.Create("user@example.com", "Test User", "My Business", BusinessType.Ecommerce);
+        var result = User.Create("user@example.com", "Test User", "My Business", BusinessType.Ecommerce, verificationToken: "test-token");
         return result.Value;
     }
 

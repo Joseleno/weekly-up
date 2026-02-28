@@ -35,7 +35,8 @@ public sealed class UsersModule : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         RouteGroupBuilder group = app.MapGroup("/api/users")
-            .WithTags("Users");
+            .WithTags("Users")
+            .RequireRateLimiting("api");
 
         group.MapPost("/", async (
             RegisterUserRequest request,
@@ -81,7 +82,9 @@ public sealed class UsersModule : ICarterModule
             return result.Match(
                 dto => Results.Ok(dto),
                 error => error.ToProblem());
-        }).RequireAuthorization();
+        })
+        .RequireAuthorization()
+        .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPut("/plan", async (
             UpgradePlanRequest request,
@@ -94,7 +97,9 @@ public sealed class UsersModule : ICarterModule
             return result.Match(
                 _ => Results.NoContent(),
                 error => error.ToProblem());
-        }).RequireAuthorization();
+        })
+        .RequireAuthorization()
+        .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/me", async (
             IMediator mediator,
@@ -106,7 +111,9 @@ public sealed class UsersModule : ICarterModule
             return result.Match(
                 dto => Results.Ok(dto),
                 error => error.ToProblem());
-        }).RequireAuthorization();
+        })
+        .RequireAuthorization()
+        .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/dashboard", async (
             IMediator mediator,
@@ -118,6 +125,8 @@ public sealed class UsersModule : ICarterModule
             return result.Match(
                 dto => Results.Ok(dto),
                 error => error.ToProblem());
-        }).RequireAuthorization();
+        })
+        .RequireAuthorization()
+        .Produces(StatusCodes.Status401Unauthorized);
     }
 }

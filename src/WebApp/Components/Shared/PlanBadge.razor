@@ -1,0 +1,30 @@
+@* Exibe o plano do usuário como um chip colorido *@
+
+<MudChip T="string"
+         Color="@_color"
+         Size="Size.Small"
+         Variant="Variant.Filled"
+         Class="@Class">
+    @_label
+</MudChip>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Plan { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private Color _color;
+    private string _label = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        (_color, _label) = Plan.ToUpperInvariant() switch
+        {
+            "PRO"      => (Color.Primary, "Pro"),
+            "BUSINESS" => (Color.Secondary, "Business"),
+            _          => (Color.Default, "Grátis"),
+        };
+    }
+}

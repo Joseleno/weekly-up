@@ -1,0 +1,26 @@
+@* Alerta de erro com opção de retry *@
+
+<MudAlert Severity="Severity.Error"
+          Variant="Variant.Outlined"
+          Class="my-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+        <MudText Typo="Typo.body2">@Message</MudText>
+        @if (OnRetry.HasDelegate)
+        {
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Text"
+                       Color="Color.Error"
+                       OnClick="OnRetry">
+                Tentar novamente
+            </MudButton>
+        }
+    </MudStack>
+</MudAlert>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Message { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+}

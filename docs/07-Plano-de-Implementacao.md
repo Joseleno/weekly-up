@@ -2672,6 +2672,190 @@ public sealed class RegisterUserCommandHandlerTests
 
 ---
 
+## Presentation Layer -- Blazor WebApp (Fases F0-F7)
+
+### Visao Geral
+
+O frontend do WeeklyUp e uma aplicacao **Blazor WebAssembly Standalone** (SPA 100% client-side) com suporte a **PWA** (Progressive Web App), substituindo a necessidade de app nativo mobile. A WebApp consome a API REST via `HttpClient` + JSON e nao possui nenhuma referencia direta aos projetos backend.
+
+### Stack da WebApp
+
+| Tecnologia | Versao | Uso |
+|-----------|--------|-----|
+| Blazor WebAssembly Standalone | .NET 10 | SPA client-side, hospedado como site estatico |
+| MudBlazor | 8.x | Component library Material Design (80+ componentes) |
+| BlazorApexCharts | 3.x | Graficos interativos (linha, barra, donut, pizza) |
+| Blazored.LocalStorage | 4.x | Persistencia de JWT no localStorage |
+| PWA | Nativo | Instalavel no celular via browser |
+
+### Regras Arquiteturais
+
+- **Zero `ProjectReference`** para Domain, Application ou Infrastructure
+- Comunicacao exclusivamente via `HttpClient` + JSON (endpoints da API)
+- Auth: `JwtAuthenticationStateProvider` (custom) + `JwtDelegatingHandler` (DelegatingHandler que injeta header `Authorization: Bearer`)
+- Estado de autenticacao persistido no `localStorage`
+- Todos os componentes custom sao `sealed` (mesma convencao do backend)
+
+### Estrutura de Pastas
+
+```
+src/WeeklyUp.WebApp/
+  WeeklyUp.WebApp.csproj
+  Program.cs
+  App.razor
+  Routes.razor
+  _Imports.razor
+  Auth/
+    JwtAuthenticationStateProvider.cs
+    JwtDelegatingHandler.cs
+  Components/
+    MetricCard.razor
+    InsightCard.razor
+    ChartPanel.razor
+    LockOverlay.razor
+    WeekComparison.razor
+  Layout/
+    MainLayout.razor
+    MainLayout.razor.css
+    NavMenu.razor
+  Pages/
+    Dashboard.razor
+    Login.razor
+    Register.razor
+    ReportHistory.razor
+    ReportDetail.razor
+    Demographics.razor
+    Integrations.razor
+    Settings.razor
+    Billing.razor
+  Services/
+    ApiAuthService.cs
+    ApiReportService.cs
+    ApiIntegrationService.cs
+    ApiUserService.cs
+  Models/
+    LoginRequest.cs
+    RegisterRequest.cs
+    AuthTokenResponse.cs
+    DashboardResponse.cs
+    ReportResponse.cs
+  wwwroot/
+    index.html
+    manifest.json
+    service-worker.js
+    css/
+    icon-192.png
+    icon-512.png
+
+tests/WeeklyUp.WebApp.Tests/
+  WeeklyUp.WebApp.Tests.csproj
+  Components/
+    MetricCardTests.cs
+    InsightCardTests.cs
+  Pages/
+    DashboardTests.cs
+    LoginTests.cs
+```
+
+### Fase F0 -- Scaffolding
+
+**Objetivo:** Projeto criado, compilando, com MudBlazor configurado e auth base pronta.
+
+**Arquivos:**
+- `WeeklyUp.WebApp.csproj` -- PackageReferences: MudBlazor, Blazored.LocalStorage, BlazorApexCharts
+- `Program.cs` -- Registrar MudBlazor, HttpClient, AuthenticationStateProvider, LocalStorage
+- `App.razor` -- MudThemeProvider + CascadingAuthenticationState
+- `_Imports.razor` -- Usings globais (MudBlazor, Microsoft.AspNetCore.Components.Authorization)
+- `wwwroot/index.html` -- MudBlazor CSS/JS, manifest link, service worker registration
+
+**Criterio de aceite:** `dotnet build` e `dotnet publish` funcionam. App abre no browser com tema MudBlazor.
+
+### Fase F1 -- Auth (Login + Register)
+
+**Objetivo:** Usuario consegue registrar, logar e ter JWT persistido.
+
+**Componentes:**
+- `LoginPage.razor` -- MudTextField (email/senha) + MudButton + Google OAuth link
+- `RegisterPage.razor` -- MudTextField (nome, email, senha, negocio, tipo)
+- `JwtAuthenticationStateProvider` -- Decodifica JWT, expoe claims, notifica mudancas de estado
+- `JwtDelegatingHandler` -- Intercepta HttpClient, adiciona `Authorization: Bearer {token}`
+- `ApiAuthService` -- POST `/api/auth/login`, POST `/api/auth/register`
+
+**Fluxo:**
+1. Usuario preenche form → `ApiAuthService.LoginAsync()` → recebe `AuthTokenDto`
+2. Token salvo no localStorage via `Blazored.LocalStorage`
+3. `JwtAuthenticationStateProvider.NotifyUserAuthentication()` atualiza estado
+4. `AuthorizeRouteView` redireciona para Dashboard
+
+### Fase F2 -- Layout + Navegacao
+
+**Objetivo:** Layout responsivo com sidebar, top bar e navegacao entre paginas.
+
+**Componentes:**
+- `MainLayout.razor` -- MudLayout + MudDrawer (sidebar) + MudAppBar (top bar)
+- `NavMenu.razor` -- MudNavMenu com links (Dashboard, Relatorios, Integracoes, Config, Billing)
+- Responsividade via MudDrawer breakpoint (collapsa em mobile)
+- `UserMenu` -- MudMenu com nome do usuario + logout
+
+### Fase F3 -- Dashboard
+
+**Objetivo:** Dashboard com metricas e graficos da semana.
+
+**Componentes:**
+- `DashboardPage.razor` -- Chama GET `/api/dashboard`, renderiza grid
+- `MetricCard.razor` -- MudPaper com icone + valor + variacao ↑↓% + cor
+- `RevenueChart` -- ApexChart tipo Line (ultimas 12 semanas)
+- `TrafficChart` -- ApexChart tipo Bar
+- `InsightCard.razor` -- MudAlert com tipo (destaque/alerta/dica) e icone
+- `LockOverlay.razor` -- Blur + "Faca upgrade" para features Pro+
+
+### Fase F4 -- Demographics + Graficos
+
+**Objetivo:** Visualizacao completa de dados demograficos (plano Pro+).
+
+**Componentes:**
+- `GenderPieChart` -- ApexChart tipo Pie
+- `AgeBarChart` -- ApexChart tipo Bar horizontal
+- `LocationList` -- MudSimpleTable top 5 cidades
+- `DeviceSplit` -- ApexChart tipo Donut
+- `TrafficSourceChart` -- ApexChart tipo Donut
+- `WeekComparison.razor` -- Side-by-side comparativo semana atual vs anterior
+
+### Fase F5 -- Relatorios + Integracoes
+
+**Objetivo:** Historico de relatorios, detalhe e gerenciamento de integracoes.
+
+**Componentes:**
+- `ReportHistoryPage.razor` -- MudTimeline com relatorios passados
+- `ReportDetailPage.razor` -- Relatorio completo (metricas + demographics + insights)
+- `IntegrationsPage.razor` -- MudCard por integracao (status, conectar/desconectar)
+- `ManualMetricForm` -- MudForm para entrada manual de metricas
+
+### Fase F6 -- Settings + Billing
+
+**Objetivo:** Preferencias do usuario e integracao com Stripe.
+
+**Componentes:**
+- `SettingsPage.razor` -- Preferencias do relatorio (dia, hora, formato)
+- `ProfilePage.razor` -- Editar nome, negocio, tipo
+- `BillingPage.razor` -- Cards de plano (Free/Pro/Business) + botao upgrade
+- Redirect para Stripe Checkout Session URL (via API)
+- Redirect para Stripe Billing Portal (via API)
+
+### Fase F7 -- PWA + Polish + Deploy
+
+**Objetivo:** App instalavel, responsivo e deployado.
+
+**Tarefas:**
+- Configurar `manifest.json` (nome, icones 192/512, cores, `start_url`, `display: standalone`)
+- Configurar `service-worker.js` (cache offline basico para assets estaticos)
+- Testar instalacao PWA no Chrome desktop + mobile (Android/iOS)
+- Testar responsividade em todas as telas (mobile 375px, tablet 768px, desktop 1280px)
+- Deploy para Azure Static Web Apps (hosting estatico gratuito para Blazor WASM)
+- Configurar CORS na API para aceitar dominio do WebApp em producao
+
+---
+
 ## Resumo Executivo
 
 | Fase | Foco | Arquivos | Testes | Dependencia |
@@ -2683,11 +2867,19 @@ public sealed class RegisterUserCommandHandlerTests
 | **4** | Infrastructure (EF, Repos, Providers, Jobs, Cache) | ~30 arquivos | ~20 testes | Fase 3 |
 | **5** | API (Carter Modules, Middleware, Program.cs) | ~15 arquivos | ~15 testes | Fase 4 |
 | **6** | Testes finais (Architecture, Integration, E2E) | ~10 arquivos | ~30 testes | Fase 5 |
+| **F0** | WebApp Scaffolding (Blazor WASM + MudBlazor + PWA) | ~10 arquivos | `dotnet build` | Fase 5 (API pronta) |
+| **F1** | Auth (Login, Register, JWT) | ~8 arquivos | ~5 testes bUnit | F0 |
+| **F2** | Layout + Navegacao | ~5 arquivos | -- | F1 |
+| **F3** | Dashboard (metricas, graficos, insights) | ~8 arquivos | ~5 testes bUnit | F2 |
+| **F4** | Demographics + Graficos avancados | ~8 arquivos | -- | F3 |
+| **F5** | Relatorios + Integracoes | ~6 arquivos | ~3 testes bUnit | F3 |
+| **F6** | Settings + Billing (Stripe) | ~5 arquivos | -- | F5 |
+| **F7** | PWA + Polish + Deploy | ~3 arquivos | manual | F6 |
 
-**Total estimado:** ~150 arquivos de codigo + ~175 testes
+**Total estimado:** ~150 arquivos backend + ~50 arquivos WebApp + ~175 testes backend + ~15 testes bUnit
 
 **Principio fundamental:** Cada fase so inicia quando a anterior esta 100% completa com todos os testes passando. Quality-first, nao speed-first.
 
 ---
 
-*Este documento e a referencia definitiva para implementacao do WeeklyUp. Todos os exemplos de codigo usam a stack real (Mediator source generator, Mapperly, .NET 10, C# 14).*
+*Este documento e a referencia definitiva para implementacao do WeeklyUp. Backend usa a stack real (Mediator source generator, Mapperly, .NET 10, C# 14). Frontend usa Blazor WebAssembly Standalone + MudBlazor + BlazorApexCharts (PWA).*

@@ -1,0 +1,161 @@
+@page "/integrations"
+@attribute [Authorize]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Integrações — WeeklyUp</PageTitle>
+
+<MudStack Spacing="4">
+    <MudStack Spacing="1">
+        <MudText Typo="Typo.h5"><b>Integrações</b></MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            Conecte suas plataformas para receber métricas automáticas nos relatórios.
+        </MudText>
+    </MudStack>
+
+    @if (_loading)
+    {
+        <LoadingSpinner Message="Carregando integrações..." />
+    }
+    else if (_error is not null)
+    {
+        <ErrorAlert Message="@_error" OnRetry="LoadAsync" />
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var provider in _supportedProviders)
+            {
+                var connected = GetConnected(provider.Key);
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="1">
+                        <MudCardContent>
+                            <MudStack Spacing="3">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@provider.Value.Icon" Color="Color.Primary" />
+                                    <MudText Typo="Typo.subtitle1"><b>@provider.Value.Label</b></MudText>
+                                </MudStack>
+
+                                @if (connected is not null)
+                                {
+                                    <MudStack Spacing="1">
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Success">
+                                            Conectado
+                                        </MudChip>
+                                        @if (connected.AccountId is not null)
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @connected.AccountId
+                                            </MudText>
+                                        }
+                                        @if (!string.Equals(connected.Status, StatusActive, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">
+                                                Inativo
+                                            </MudChip>
+                                        }
+                                    </MudStack>
+
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               FullWidth="true"
+                                               OnClick="@(() => DisconnectAsync(provider.Key, provider.Value.Label))">
+                                        Desconectar
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default">
+                                        Não conectado
+                                    </MudChip>
+
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               FullWidth="true"
+                                               OnClick="@(() => Connect(provider.Key))">
+                                        Conectar
+                                    </MudButton>
+                                }
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudStack>
+
+@code {
+    private const string StatusActive = "Active";
+
+    // DEVE corresponder exatamente ao enum IntegrationProvider em Domain/Enums/IntegrationProvider.cs
+    private static readonly Dictionary<string, (string Label, string Icon)> _supportedProviders = new()
+    {
+        ["GoogleAnalytics"] = ("Google Analytics", Icons.Material.Filled.BarChart),
+        ["Shopify"]         = ("Shopify",           Icons.Material.Filled.Store),
+        ["WooCommerce"]     = ("WooCommerce",        Icons.Material.Filled.ShoppingCart),
+        ["WhatsApp"]        = ("WhatsApp Business",  Icons.Material.Filled.Chat),
+    };
+
+    private readonly CancellationTokenSource _cts = new();
+    private List<IntegrationResponse>? _integrations;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _integrations = await ApiClient.GetIntegrationsAsync(_cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante carregamento — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Não foi possível carregar as integrações. Verifique sua conexão.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IntegrationResponse? GetConnected(string provider) =>
+        _integrations?.FirstOrDefault(i => i.Provider == provider);
+
+    private void Connect(string provider) =>
+        Navigation.NavigateTo($"/integrations/connect/{provider}");
+
+    private async Task DisconnectAsync(string provider, string label)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Tem certeza que deseja desconectar {label}? As métricas desta plataforma não serão mais coletadas." },
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Desconectar integração", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            // TODO: chamar ApiClient.DisconnectIntegrationAsync(provider, _cts.Token) quando endpoint for adicionado ao IApiClient
+            Snackbar.Add("Funcionalidade em breve", Severity.Info);
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

@@ -1,0 +1,278 @@
+@page "/billing"
+@attribute [Authorize]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Planos — WeeklyUp</PageTitle>
+
+@if (_loading)
+{
+    <LoadingSpinner Message="Carregando planos..." />
+}
+else if (_error is not null)
+{
+    <ErrorAlert Message="@_error" OnRetry="LoadAsync" />
+}
+else if (_profile is not null)
+{
+    <MudStack Spacing="4">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Typo="Typo.h5"><b>Planos e faturamento</b></MudText>
+            <PlanBadge Plan="@_profile.Plan" />
+        </MudStack>
+
+        <MudGrid>
+            @* Plano Free *@
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2" Style="height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6"><b>Free</b></MudText>
+                            <MudText Typo="Typo.h5" Color="Color.Primary"><b>Grátis</b></MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.body2">1 relatório por semana</MudText>
+                            <MudText Typo="Typo.body2">Métricas básicas</MudText>
+                            <MudText Typo="Typo.body2">Email semanal</MudText>
+                        </MudStack>
+                    </MudCardContent>
+                    <MudCardActions>
+                        @if (IsPlan(PlanNames.Free))
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Default"
+                                       Disabled="true" FullWidth="true">
+                                Plano atual
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Default"
+                                       Disabled="true" FullWidth="true">
+                                Não disponível
+                            </MudButton>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+
+            @* Plano Pro *@
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2" Style="height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6"><b>Pro</b></MudText>
+                            <MudText Typo="Typo.h5" Color="Color.Primary"><b>R$ 49/mês</b></MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.body2">Tudo do Free</MudText>
+                            <MudText Typo="Typo.body2">Insights com IA</MudText>
+                            <MudText Typo="Typo.body2">Métricas de tráfego</MudText>
+                            <MudText Typo="Typo.body2">Dados demográficos</MudText>
+                        </MudStack>
+                    </MudCardContent>
+                    <MudCardActions>
+                        @if (IsPlan(PlanNames.Pro))
+                        {
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Default"
+                                       Disabled="true"
+                                       FullWidth="true">
+                                Plano atual
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       Disabled="_upgrading"
+                                       OnClick="@(() => UpgradeAsync(PlanNames.Pro))">
+                                @if (_upgrading)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <span>Aguarde...</span>
+                                }
+                                else
+                                {
+                                    <span>Assinar Pro</span>
+                                }
+                            </MudButton>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+
+            @* Plano Business *@
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2" Style="height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6"><b>Business</b></MudText>
+                            <MudText Typo="Typo.h5" Color="Color.Primary"><b>R$ 99/mês</b></MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.body2">Tudo do Pro</MudText>
+                            <MudText Typo="Typo.body2">WhatsApp Business</MudText>
+                            <MudText Typo="Typo.body2">Múltiplas integrações</MudText>
+                            <MudText Typo="Typo.body2">Suporte prioritário</MudText>
+                        </MudStack>
+                    </MudCardContent>
+                    <MudCardActions>
+                        @if (IsPlan(PlanNames.Business))
+                        {
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Default"
+                                       Disabled="true"
+                                       FullWidth="true">
+                                Plano atual
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       Disabled="_upgrading"
+                                       OnClick="@(() => UpgradeAsync(PlanNames.Business))">
+                                @if (_upgrading)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <span>Aguarde...</span>
+                                }
+                                else
+                                {
+                                    <span>Assinar Business</span>
+                                }
+                            </MudButton>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        @if (!IsPlan(PlanNames.Free))
+        {
+            <MudDivider />
+
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1"><b>Gerenciar assinatura</b></MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Disabled="_openingPortal"
+                           OnClick="OpenBillingPortalAsync">
+                    @if (_openingPortal)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Abrindo portal...</span>
+                    }
+                    else
+                    {
+                        <span>Acessar portal de faturamento</span>
+                    }
+                </MudButton>
+            </MudStack>
+        }
+    </MudStack>
+}
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private UserProfileResponse? _profile;
+    private bool _loading = true;
+    private string? _error;
+    private bool _upgrading;
+    private bool _openingPortal;
+
+    private bool IsPlan(string plan) =>
+        string.Equals(_profile?.Plan, plan, StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _profile = await ApiClient.GetProfileAsync(_cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante carregamento — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Não foi possível carregar as informações do plano. Verifique sua conexão.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task UpgradeAsync(string plan)
+    {
+        _upgrading = true;
+
+        try
+        {
+            var session = await ApiClient.CreateCheckoutSessionAsync(plan, _cts.Token);
+
+            if (session is not null)
+            {
+                Navigation.NavigateTo(session.Url, forceLoad: true);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante operação — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Erro ao iniciar checkout. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            _upgrading = false;
+        }
+    }
+
+    private async Task OpenBillingPortalAsync()
+    {
+        _openingPortal = true;
+
+        try
+        {
+            var portal = await ApiClient.CreateBillingPortalSessionAsync(_cts.Token);
+
+            if (portal is not null)
+            {
+                Navigation.NavigateTo(portal.Url, forceLoad: true);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante operação — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Erro ao abrir portal de faturamento. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            _openingPortal = false;
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

@@ -2,7 +2,7 @@ using Mediator;
 
 using WeeklyUp.Domain.Common;
 
-namespace WeeklyUp.Infrastructure.Persistence.Interceptors;
+namespace WeeklyUp.Application.Common.Notifications;
 
 /// <summary>
 /// Wrapper não-genérico que adapta um IDomainEvent para INotification do Mediator,

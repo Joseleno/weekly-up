@@ -23,7 +23,12 @@ public sealed class VerifyEmailCommandHandler
             return AppError.NotFound("User.NotFound", $"Usuario com Id '{command.UserId}' nao encontrado.");
         }
 
-        user.VerifyEmail();
+        Result verifyResult = user.VerifyEmail(command.Token);
+        if (verifyResult.IsFailure)
+        {
+            return verifyResult.Error;
+        }
+
         _uow.Users.Update(user);
 
         return true;

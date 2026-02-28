@@ -21,9 +21,12 @@ public sealed class User : AggregateRoot
     public string Timezone { get; private set; } = DefaultTimezone;
     public PlanType Plan { get; private set; }
     public string? ExternalAuthId { get; private set; }
+    public string? StripeCustomerId { get; private set; }
     public string? PhoneNumber { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsEmailVerified { get; private set; }
+    public string? VerificationToken { get; private set; }
+    public DateTime? VerificationTokenExpiresAt { get; private set; }
     public IReadOnlyCollection<Integration> Integrations => _integrations.AsReadOnly();
 
     private User() { }
@@ -33,7 +36,8 @@ public sealed class User : AggregateRoot
         string name,
         string businessName,
         BusinessType businessType,
-        string? externalAuthId = null)
+        string? externalAuthId = null,
+        string? verificationToken = null)
     {
         Result<Email> emailResult = Email.Create(email);
         if (emailResult.IsFailure)
@@ -52,6 +56,13 @@ public sealed class User : AggregateRoot
             return AppError.Validation("User.NameEmpty", "Nome nao pode ser vazio.");
         }
 
+        if (externalAuthId is null && string.IsNullOrWhiteSpace(verificationToken))
+        {
+            return AppError.Validation(
+                "User.VerificationTokenRequired",
+                "Token de verificacao obrigatorio para usuarios sem autenticacao externa.");
+        }
+
         User user = new()
         {
             Email = emailResult.Value,
@@ -60,11 +71,15 @@ public sealed class User : AggregateRoot
             BusinessType = businessType,
             Plan = PlanType.Free,
             IsActive = true,
-            IsEmailVerified = false,
+            IsEmailVerified = externalAuthId is not null,
             ExternalAuthId = externalAuthId,
+            VerificationToken = externalAuthId is null ? verificationToken : null,
+            VerificationTokenExpiresAt = externalAuthId is null && verificationToken is not null
+                ? DateTime.UtcNow.AddHours(24)
+                : null,
         };
 
-        user.RaiseDomainEvent(new UserRegisteredEvent(user.Id, user.Email.Value));
+        user.RaiseDomainEvent(new UserRegisteredEvent(user.Id, user.Email.Value, user.Name, user.VerificationToken));
         return user;
     }
 
@@ -135,11 +150,57 @@ public sealed class User : AggregateRoot
         return true;
     }
 
-    public void VerifyEmail()
+    public void SetPlanFromWebhook(PlanType newPlan)
     {
+        if (Plan == newPlan)
+        {
+            return;
+        }
+        PlanType previousPlan = Plan;
+        Plan = newPlan;
+        UpdatedAt = DateTime.UtcNow;
+        RaiseDomainEvent(new UserPlanChangedEvent(Id, previousPlan, newPlan));
+    }
+
+    public void SetVerificationToken(string token)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        VerificationToken = token;
+        VerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    internal void SetVerificationTokenWithExpiry(string token, DateTime expiresAt)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        VerificationToken = token;
+        VerificationTokenExpiresAt = expiresAt;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public Result VerifyEmail(string token)
+    {
+        if (IsEmailVerified)
+        {
+            return Result.Failure(AppError.Validation("User.AlreadyVerified", "Email ja verificado."));
+        }
+
+        if (VerificationTokenExpiresAt.HasValue && DateTime.UtcNow > VerificationTokenExpiresAt.Value)
+        {
+            return Result.Failure(AppError.Validation("User.VerificationTokenExpired", "Token de verificacao expirado."));
+        }
+
+        if (string.IsNullOrWhiteSpace(VerificationToken) || VerificationToken != token)
+        {
+            return Result.Failure(AppError.Validation("User.InvalidVerificationToken", "Token de verificacao invalido."));
+        }
+
         IsEmailVerified = true;
+        VerificationToken = null;
+        VerificationTokenExpiresAt = null;
         UpdatedAt = DateTime.UtcNow;
         RaiseDomainEvent(new UserEmailVerifiedEvent(Id));
+        return Result.Success();
     }
 
     public Result<bool> UpdateProfile(string name, string businessName, BusinessType businessType)
@@ -160,6 +221,13 @@ public sealed class User : AggregateRoot
         BusinessType = businessType;
         UpdatedAt = DateTime.UtcNow;
         return true;
+    }
+
+    public void SetStripeCustomerId(string customerId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(customerId);
+        StripeCustomerId = customerId;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void SetPhoneNumber(string? phoneNumber)

@@ -1,0 +1,24 @@
+services:
+  postgres-e2e:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: weeklyup_e2e
+      POSTGRES_USER: weeklyup
+      POSTGRES_PASSWORD: weeklyup123
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weeklyup -d weeklyup_e2e"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-e2e:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

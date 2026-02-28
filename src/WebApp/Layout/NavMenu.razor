@@ -1,0 +1,24 @@
+@inject NavigationManager Navigation
+
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Filled.Dashboard">
+        Dashboard
+    </MudNavLink>
+    <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix"
+                Icon="@Icons.Material.Filled.Assessment">
+        Relatórios
+    </MudNavLink>
+    <MudNavLink Href="/integrations" Match="NavLinkMatch.Prefix"
+                Icon="@Icons.Material.Filled.Extension">
+        Integrações
+    </MudNavLink>
+    <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix"
+                Icon="@Icons.Material.Filled.Settings">
+        Configurações
+    </MudNavLink>
+    <MudNavLink Href="/billing" Match="NavLinkMatch.Prefix"
+                Icon="@Icons.Material.Filled.CreditCard">
+        Planos
+    </MudNavLink>
+</MudNavMenu>

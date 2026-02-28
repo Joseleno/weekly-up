@@ -28,7 +28,7 @@ public sealed class DataAggregatorTests
         var encryptor = Substitute.For<ITokenEncryptor>();
         encryptor.Encrypt(Arg.Any<string>()).Returns("encrypted");
 
-        var userResult = User.Create("owner@test.com", "Owner", "Business", BusinessType.Ecommerce);
+        var userResult = User.Create("owner@test.com", "Owner", "Business", BusinessType.Ecommerce, verificationToken: "test-token");
         var user = userResult.Value;
         user.AddIntegration(provider, "access-token", "refresh-token", "account-1", null, encryptor);
         return user.Integrations.First();
@@ -108,7 +108,7 @@ public sealed class DataAggregatorTests
         // Arrange
         var encryptor = Substitute.For<ITokenEncryptor>();
         encryptor.Encrypt(Arg.Any<string>()).Returns("encrypted");
-        var userResult = User.Create("owner2@test.com", "Owner2", "Business2", BusinessType.Ecommerce);
+        var userResult = User.Create("owner2@test.com", "Owner2", "Business2", BusinessType.Ecommerce, verificationToken: "test-token");
         var user = userResult.Value;
         user.UpgradePlan(PlanType.Pro);
         user.AddIntegration(IntegrationProvider.GoogleAnalytics4, "tok1", "ref1", "acc1", null, encryptor);

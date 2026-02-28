@@ -1,0 +1,65 @@
+@inject ILocalStorageService LocalStorage
+
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="AppTheme.Default" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<CascadingAuthenticationState>
+    <CascadingValue Value="(Action<bool>)SetDarkMode">
+        <Router AppAssembly="typeof(App).Assembly">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
+                    <NotAuthorized>
+                        <RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="routeData" Selector="h1" />
+            </Found>
+            <NotFound>
+                <PageTitle>Página não encontrada — WeeklyUp</PageTitle>
+                <LayoutView Layout="typeof(MainLayout)">
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="4" Class="py-16">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff"
+                                 Style="font-size: 5rem;"
+                                 Color="Color.Secondary" />
+                        <MudText Typo="Typo.h4" Align="Align.Center"><b>Página não encontrada</b></MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
+                            A página que você procura não existe ou foi movida.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Href="/"
+                                   StartIcon="@Icons.Material.Filled.Home">
+                            Voltar ao início
+                        </MudButton>
+                    </MudStack>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </CascadingValue>
+</CascadingAuthenticationState>
+
+@code {
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var saved = await LocalStorage.GetItemAsync<bool>("weeklyup_dark_mode");
+        _isDarkMode = saved;
+    }
+
+    private async void SetDarkMode(bool isDark)
+    {
+        _isDarkMode = isDark;
+        StateHasChanged();
+        try
+        {
+            await LocalStorage.SetItemAsync("weeklyup_dark_mode", isDark);
+        }
+        catch
+        {
+            // localStorage indisponível (ex: modo privado restrito) — ignorar
+        }
+    }
+}

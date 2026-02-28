@@ -31,7 +31,7 @@ public sealed class RegisterUserCommandHandlerTests
     {
         // Arrange
         var command = new RegisterUserCommand("existing@example.com", "Test User", "Test Biz", BusinessType.Ecommerce);
-        var existingUser = User.Create("existing@example.com", "Existing User", "Existing Biz", BusinessType.Services).Value;
+        var existingUser = User.Create("existing@example.com", "Existing User", "Existing Biz", BusinessType.Services, verificationToken: "test-token").Value;
         _users.GetByEmailAsync(command.Email, Arg.Any<CancellationToken>()).Returns(existingUser);
 
         // Act
@@ -75,7 +75,7 @@ public sealed class RegisterUserCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenEmailIsNew_ShouldCallSaveChanges()
+    public async Task Handle_WhenEmailIsNew_ShouldAddUserToRepositoryAndPreference()
     {
         // Arrange
         var command = new RegisterUserCommand("new@example.com", "New User", "New Business", BusinessType.Services);
@@ -86,5 +86,6 @@ public sealed class RegisterUserCommandHandlerTests
 
         // Assert
         await _users.Received(1).AddAsync(Arg.Any<User>(), Arg.Any<CancellationToken>());
+        await _reportPreferences.Received(1).AddAsync(Arg.Any<ReportPreference>(), Arg.Any<CancellationToken>());
     }
 }

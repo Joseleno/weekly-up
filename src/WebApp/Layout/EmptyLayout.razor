@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+@inject ILocalStorageService LocalStorage
+
+<MudThemeProvider IsDarkMode="@_isDarkMode" Theme="AppTheme.Default" />
+
+<MudLayout>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center" Style="min-height: 100vh;">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isDarkMode = await LocalStorage.GetItemAsync<bool>("weeklyup_dark_mode");
+    }
+}

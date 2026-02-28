@@ -46,7 +46,7 @@ public sealed class DisconnectIntegrationCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var command = new DisconnectIntegrationCommand(userId, IntegrationProvider.GoogleAnalytics4);
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
 
         var encryptor = Substitute.For<ITokenEncryptor>();
         encryptor.Encrypt(Arg.Any<string>()).Returns(args => $"encrypted-{args[0]}");

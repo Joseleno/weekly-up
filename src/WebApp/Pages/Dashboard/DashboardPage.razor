@@ -1,0 +1,234 @@
+@page "/"
+@attribute [Authorize]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+
+<PageTitle>Dashboard — WeeklyUp</PageTitle>
+
+@if (_loading)
+{
+    <LoadingSpinner Message="Carregando seu dashboard..." />
+}
+else if (_error is not null)
+{
+    <ErrorAlert Message="@_error" OnRetry="LoadDataAsync" />
+}
+else if (_dashboard is not null)
+{
+    <MudStack Spacing="4">
+        @* Header *@
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h5">
+                    Olá, <b>@FirstName</b>!
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    @_dashboard.Profile.BusinessName
+                </MudText>
+            </MudStack>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <PlanBadge Plan="@_dashboard.Profile.Plan" />
+                @if (string.Equals(_dashboard.Profile.Plan, PlanNames.Free, StringComparison.OrdinalIgnoreCase))
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Href="/billing">
+                        Fazer upgrade
+                    </MudButton>
+                }
+            </MudStack>
+        </MudStack>
+
+        @* Aviso e-mail não verificado *@
+        @if (!_dashboard.Profile.IsEmailVerified)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true">
+                Confirme seu e-mail para ativar o envio de relatórios.
+            </MudAlert>
+        }
+
+        @* Aviso sem integrações *@
+        @if (_dashboard.Integrations.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                    <span>Conecte suas ferramentas para enriquecer seus relatórios.</span>
+                    <MudButton Size="Size.Small" Variant="Variant.Text"
+                               Color="Color.Info" Href="/integrations">
+                        Conectar agora
+                    </MudButton>
+                </MudStack>
+            </MudAlert>
+        }
+
+        @* Sem relatório ainda *@
+        @if (_dashboard.LastReport is null)
+        {
+            <MudCard Elevation="1">
+                <MudCardContent>
+                    <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="py-8">
+                        <MudIcon Icon="@Icons.Material.Filled.Assessment"
+                                 Color="Color.Secondary" Style="font-size: 3rem;" />
+                        <MudText Typo="Typo.h6" Align="Align.Center">
+                            Nenhum relatório ainda
+                        </MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+                            Seu primeiro relatório será gerado na próxima segunda-feira.
+                        </MudText>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+        else
+        {
+            @* Badge do último relatório *@
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.subtitle1"><b>Último relatório:</b></MudText>
+                <MudChip T="string" Size="Size.Small"
+                         Color="@(_dashboard.LastReport.Status == ReportStatus.Completed ? Color.Success : Color.Default)">
+                    @_dashboard.LastReport.WeekLabel
+                </MudChip>
+                <MudLink Href="@($"/reports/{_dashboard.LastReport.Id}")" Typo="Typo.body2">
+                    Ver completo →
+                </MudLink>
+            </MudStack>
+
+            @if (_detail is not null && _detail.Metrics is not null)
+            {
+                @* Cards de métricas *@
+                <MudGrid>
+                    <MudItem xs="6" sm="6" md="3">
+                        <MetricCard Label="Receita"
+                                    Value="@_detail.Metrics.Revenue.ToString("C2", _ptBr)"
+                                    Icon="@Icons.Material.Filled.AttachMoney" />
+                    </MudItem>
+                    <MudItem xs="6" sm="6" md="3">
+                        <MetricCard Label="Vendas"
+                                    Value="@_detail.Metrics.SalesCount.ToString()"
+                                    SubValue="@($"Ticket médio: {_detail.Metrics.AverageTicket.ToString("C2", _ptBr)}")"
+                                    Icon="@Icons.Material.Filled.ShoppingCart" />
+                    </MudItem>
+                    <MudItem xs="6" sm="6" md="3">
+                        <MetricCard Label="Novos clientes"
+                                    Value="@_detail.Metrics.NewCustomers.ToString()"
+                                    Icon="@Icons.Material.Filled.PersonAdd" />
+                    </MudItem>
+                    <MudItem xs="6" sm="6" md="3">
+                        <MetricCard Label="Visitas"
+                                    Value="@_detail.Metrics.Visits.ToString("N0")"
+                                    SubValue="@($"{_detail.Metrics.PageViews:N0} page views")"
+                                    Icon="@Icons.Material.Filled.Visibility" />
+                    </MudItem>
+                </MudGrid>
+
+                @* Insights + Demographics *@
+                <MudGrid>
+                    <MudItem xs="12" md="7">
+                        @if (_detail.Insights is not null)
+                        {
+                            @if (string.Equals(_dashboard.Profile.Plan, PlanNames.Free, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <UpgradeOverlay Message="Insights de IA disponíveis no plano Pro">
+                                    <InsightCard Insights="@_detail.Insights" />
+                                </UpgradeOverlay>
+                            }
+                            else
+                            {
+                                <InsightCard Insights="@_detail.Insights" />
+                            }
+                        }
+                    </MudItem>
+                    <MudItem xs="12" md="5">
+                        @if (_detail.Demographics is not null)
+                        {
+                            @if (string.Equals(_dashboard.Profile.Plan, PlanNames.Free, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <UpgradeOverlay Message="Dados demográficos disponíveis no plano Pro">
+                                    <DemographicsPanel Demographics="@_detail.Demographics" />
+                                </UpgradeOverlay>
+                            }
+                            else
+                            {
+                                <DemographicsPanel Demographics="@_detail.Demographics" />
+                            }
+                        }
+                    </MudItem>
+                </MudGrid>
+            }
+            else if (_loadingDetail)
+            {
+                <LoadingSpinner Message="Carregando dados do relatório..." />
+            }
+        }
+    </MudStack>
+}
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private DashboardResponse? _dashboard;
+    private ReportDetailResponse? _detail;
+    private bool _loading = true;
+    private bool _loadingDetail;
+    private string? _error;
+
+    private static readonly System.Globalization.CultureInfo _ptBr =
+        System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+
+    private string FirstName => _dashboard?.Profile.Name.Split(' ', 2).FirstOrDefault() ?? string.Empty;
+
+    protected override async Task OnInitializedAsync() => await LoadDataAsync();
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _dashboard = await ApiClient.GetDashboardAsync(_cts.Token);
+
+            if (_dashboard?.LastReport is { Status: ReportStatus.Completed })
+            {
+                await LoadDetailAsync(_dashboard.LastReport.Id);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante carregamento — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Não foi possível carregar o dashboard. Verifique sua conexão.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadDetailAsync(Guid reportId)
+    {
+        _loadingDetail = true;
+
+        try
+        {
+            _detail = await ApiClient.GetReportDetailAsync(reportId, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante carregamento — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            // detalhe é opcional — não bloqueia o dashboard
+        }
+        finally
+        {
+            _loadingDetail = false;
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

@@ -38,9 +38,8 @@ public sealed class LoginCommandHandler
         }
 
         string token = _jwtTokenGenerator.GenerateToken(user);
-        string refreshToken = _jwtTokenGenerator.GenerateRefreshToken();
 
         var expiresAt = new DateTimeOffset(_dateTimeProvider.UtcNow).AddHours(1);
-        return new AuthTokenDto(token, refreshToken, expiresAt);
+        return new AuthTokenDto(token, expiresAt);
     }
 }

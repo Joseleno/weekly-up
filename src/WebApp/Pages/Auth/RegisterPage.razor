@@ -1,0 +1,174 @@
+@page "/register"
+@layout EmptyLayout
+@attribute [AllowAnonymous]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Criar conta — WeeklyUp</PageTitle>
+
+<MudPaper Class="pa-8 ma-auto" MaxWidth="460px" Elevation="3">
+    <MudStack Spacing="4">
+        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary">
+                <b>WeeklyUp</b>
+            </MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+                Comece grátis — sem cartão de crédito
+            </MudText>
+        </MudStack>
+
+        <MudDivider />
+
+        <EditForm Model="_model" OnValidSubmit="HandleRegisterAsync">
+            <DataAnnotationsValidator />
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="_model.Name"
+                              Label="Seu nome"
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Person"
+                              Disabled="_loading"
+                              Required="true" />
+
+                <MudTextField @bind-Value="_model.Email"
+                              Label="E-mail"
+                              Variant="Variant.Outlined"
+                              InputType="InputType.Email"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Email"
+                              Disabled="_loading"
+                              Required="true" />
+
+                <MudTextField @bind-Value="_model.Password"
+                              Label="Senha"
+                              Variant="Variant.Outlined"
+                              InputType="_showPassword ? InputType.Text : InputType.Password"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                              OnAdornmentClick="() => _showPassword = !_showPassword"
+                              HelperText="Mínimo 8 caracteres"
+                              Disabled="_loading"
+                              Required="true" />
+
+                <MudTextField @bind-Value="_model.BusinessName"
+                              Label="Nome do negócio"
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Store"
+                              Disabled="_loading"
+                              Required="true" />
+
+                <MudSelect @bind-Value="_model.BusinessType"
+                           Label="Tipo de negócio"
+                           Variant="Variant.Outlined"
+                           Adornment="Adornment.Start"
+                           AdornmentIcon="@Icons.Material.Filled.Category"
+                           Disabled="_loading"
+                           Required="true">
+                    @foreach (var type in BusinessTypeOptions.All)
+                    {
+                        <MudSelectItem Value="@type.Value">@type.Label</MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (_errorMessage is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+                }
+
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Size="Size.Large"
+                           Disabled="_loading">
+                    @if (_loading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Criando conta...</span>
+                    }
+                    else
+                    {
+                        <span>Criar conta grátis</span>
+                    }
+                </MudButton>
+
+                <MudText Typo="Typo.caption" Align="Align.Center" Color="Color.Secondary">
+                    Ao criar conta você concorda com nossos Termos de Uso.
+                </MudText>
+            </MudStack>
+        </EditForm>
+
+        <MudDivider />
+
+        <MudText Typo="Typo.body2" Align="Align.Center">
+            Já tem conta?
+            <MudLink Href="/login">Entrar</MudLink>
+        </MudText>
+    </MudStack>
+</MudPaper>
+
+@code {
+    private sealed class RegisterFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string BusinessName { get; set; } = string.Empty;
+        public string BusinessType { get; set; } = string.Empty;
+    }
+
+    private readonly CancellationTokenSource _cts = new();
+    private readonly RegisterFormModel _model = new();
+    private bool _loading;
+    private bool _showPassword;
+    private string? _errorMessage;
+
+    private async Task HandleRegisterAsync()
+    {
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var request = new RegisterRequest(
+                _model.Email,
+                _model.Password,
+                _model.Name,
+                _model.BusinessName,
+                _model.BusinessType);
+
+            var response = await ApiClient.RegisterAsync(request, _cts.Token);
+
+            if (response is null)
+            {
+                _errorMessage = "Resposta inválida do servidor.";
+                return;
+            }
+
+            await AuthService.SetTokenAsync(response.Token, response.ExpiresAt);
+            Navigation.NavigateTo("/");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            _errorMessage = "Este e-mail já está cadastrado.";
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            _errorMessage = "Dados inválidos. Verifique os campos e tente novamente.";
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

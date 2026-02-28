@@ -1,6 +1,6 @@
 namespace WeeklyUp.Infrastructure.Email.Templates;
 
-public static class WelcomeEmailTemplate
+internal static class WelcomeEmailTemplate
 {
     private const string IntegrationsUrl = "https://weeklyup.app/integrations";
     private const string DashboardUrl = "https://weeklyup.app/dashboard";
@@ -20,8 +20,11 @@ public static class WelcomeEmailTemplate
         ".btn{display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600}" +
         ".footer{padding:24px 32px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #f1f5f9}";
 
-    public static string Build(string recipientName) =>
-        $"""
+    internal static string Build(string recipientName)
+    {
+        var safeName = System.Net.WebUtility.HtmlEncode(recipientName);
+
+        return $"""
         <!DOCTYPE html>
         <html lang="pt-BR">
         <head>
@@ -34,7 +37,7 @@ public static class WelcomeEmailTemplate
         <div class="container">
           <div class="header">
             <h1>🎉 Bem-vindo ao WeeklyUp!</h1>
-            <p>Olá, <strong>{recipientName}</strong>! Você está a um passo de receber relatórios semanais automáticos.</p>
+            <p>Olá, <strong>{safeName}</strong>! Você está a um passo de receber relatórios semanais automáticos.</p>
           </div>
           <div class="body">
             <p style="color:#475569;font-size:15px;margin:0 0 28px">Veja como é simples começar:</p>
@@ -71,4 +74,5 @@ public static class WelcomeEmailTemplate
         </body>
         </html>
         """;
+    }
 }

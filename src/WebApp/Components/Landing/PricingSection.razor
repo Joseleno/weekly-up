@@ -1,0 +1,94 @@
+@attribute [AllowAnonymous]
+
+<MudPaper Elevation="0" Class="py-12 px-4" Style="background: var(--mud-palette-background-grey)">
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-2"><b>Planos simples e transparentes</b></MudText>
+        <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary" Class="mb-8">
+            Comece grátis. Faça upgrade quando precisar de mais.
+        </MudText>
+
+        <MudGrid Justify="Justify.Center">
+            @foreach (var plan in _plans)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="@(plan.Highlighted ? 4 : 1)"
+                             Style="@(plan.Highlighted ? "border: 2px solid var(--mud-palette-primary)" : "")">
+                        <MudCardContent>
+                            <MudStack Spacing="3">
+                                @if (plan.Highlighted)
+                                {
+                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small"
+                                             Class="align-self-start">
+                                        Mais popular
+                                    </MudChip>
+                                }
+                                <MudText Typo="Typo.h6"><b>@plan.Name</b></MudText>
+
+                                <MudStack Row="true" AlignItems="AlignItems.Baseline" Spacing="1">
+                                    <MudText Typo="Typo.h4" Color="Color.Primary"><b>@plan.Price</b></MudText>
+                                    @if (plan.Period is not null)
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@plan.Period</MudText>
+                                    }
+                                </MudStack>
+
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@plan.Description</MudText>
+
+                                <MudDivider />
+
+                                <MudStack Spacing="2">
+                                    @foreach (var item in plan.Features)
+                                    {
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudIcon Icon="@Icons.Material.Filled.Check"
+                                                     Color="Color.Success" Size="Size.Small" />
+                                            <MudText Typo="Typo.body2">@item</MudText>
+                                        </MudStack>
+                                    }
+                                </MudStack>
+                            </MudStack>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="@(plan.Highlighted ? Variant.Filled : Variant.Outlined)"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       Href="/register">
+                                @plan.Cta
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+@code {
+    private sealed record PlanInfo(
+        string Name,
+        string Price,
+        string? Period,
+        string Description,
+        string[] Features,
+        string Cta,
+        bool Highlighted = false);
+
+    private static readonly PlanInfo[] _plans =
+    [
+        new("Grátis", "R$0", null,
+            "Para quem está começando",
+            ["1 integração", "Relatório semanal básico", "Últimas 4 semanas", "Suporte por e-mail"],
+            "Começar grátis"),
+
+        new("Pro", "R$29", "/mês",
+            "Para negócios em crescimento",
+            ["3 integrações", "Relatório completo com IA", "Histórico ilimitado", "Insights prioritários", "Suporte prioritário"],
+            "Assinar Pro",
+            Highlighted: true),
+
+        new("Business", "R$79", "/mês",
+            "Para múltiplos negócios",
+            ["Integrações ilimitadas", "Múltiplos negócios", "API de acesso", "Insights avançados de IA", "Gerente de conta dedicado"],
+            "Assinar Business"),
+    ];
+}

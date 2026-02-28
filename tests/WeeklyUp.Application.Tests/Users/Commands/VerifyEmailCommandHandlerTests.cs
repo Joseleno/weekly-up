@@ -41,12 +41,14 @@ public sealed class VerifyEmailCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenUserFound_ShouldCallVerifyEmailAndReturnTrue()
+    public async Task Handle_WhenUserFoundWithValidToken_ShouldVerifyEmailAndReturnTrue()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var command = new VerifyEmailCommand(userId, "some-token");
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        const string token = "valid-token";
+        var command = new VerifyEmailCommand(userId, token);
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
+        user.SetVerificationToken(token);
         _users.GetByIdAsync(userId, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act
@@ -56,6 +58,26 @@ public sealed class VerifyEmailCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeTrue();
         user.IsEmailVerified.Should().BeTrue();
+        user.VerificationToken.Should().BeNull();
         _users.Received(1).Update(user);
+    }
+
+    [Fact]
+    public async Task Handle_WhenTokenInvalid_ShouldReturnValidationError()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var command = new VerifyEmailCommand(userId, "wrong-token");
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
+        user.SetVerificationToken("correct-token");
+        _users.GetByIdAsync(userId, Arg.Any<CancellationToken>()).Returns(user);
+
+        // Act
+        Result<bool> result = await _sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(AppErrorType.Validation);
+        result.Error.Code.Should().Be("User.InvalidVerificationToken");
     }
 }

@@ -24,7 +24,8 @@ public sealed class IntegrationsModule : ICarterModule
     {
         RouteGroupBuilder group = app.MapGroup("/api/integrations")
             .WithTags("Integrations")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting("api");
 
         group.MapGet("/", async (
             IMediator mediator,
@@ -36,7 +37,8 @@ public sealed class IntegrationsModule : ICarterModule
             return result.Match(
                 dto => Results.Ok(dto),
                 error => error.ToProblem());
-        });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/", async (
             ConnectIntegrationRequest request,
@@ -55,7 +57,8 @@ public sealed class IntegrationsModule : ICarterModule
             return result.Match(
                 dto => Results.Created($"/api/integrations", dto),
                 error => error.ToProblem());
-        });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapDelete("/{provider}", async (
             IntegrationProvider provider,
@@ -68,6 +71,7 @@ public sealed class IntegrationsModule : ICarterModule
             return result.Match(
                 _ => Results.NoContent(),
                 error => error.ToProblem());
-        });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
     }
 }

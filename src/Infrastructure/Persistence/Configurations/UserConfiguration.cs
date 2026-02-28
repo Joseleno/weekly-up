@@ -72,15 +72,36 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.IsEmailVerified)
             .HasColumnName("is_email_verified");
 
+        builder.Property(u => u.VerificationToken)
+            .HasColumnName("verification_token")
+            .HasMaxLength(64)
+            .IsRequired(false);
+
+        builder.Property(u => u.VerificationTokenExpiresAt)
+            .HasColumnName("verification_token_expires_at")
+            .IsRequired(false);
+
+        builder.Property(u => u.StripeCustomerId)
+            .HasColumnName("stripe_customer_id")
+            .HasMaxLength(255)
+            .IsRequired(false);
+
         builder.HasIndex(u => u.ExternalAuthId)
             .HasDatabaseName("ix_users_external_auth_id")
             .IsUnique()
             .HasFilter("external_auth_id IS NOT NULL");
 
+        builder.HasIndex(u => u.StripeCustomerId)
+            .HasDatabaseName("ix_users_stripe_customer_id")
+            .IsUnique()
+            .HasFilter("stripe_customer_id IS NOT NULL");
+
         builder.Ignore(u => u.DomainEvents);
 
-        builder.HasMany<Integration>()
+        builder.HasMany(u => u.Integrations)
             .WithOne()
-            .HasForeignKey(i => i.UserId);
+            .HasForeignKey(i => i.UserId)
+            .HasConstraintName("fk_integrations_users")
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

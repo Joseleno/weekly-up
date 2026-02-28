@@ -85,12 +85,7 @@ namespace WeeklyUp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
-                    b.Property<Guid?>("UserId1")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "Provider")
                         .IsUnique()
@@ -166,6 +161,11 @@ namespace WeeklyUp.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("EmailSentAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("email_sent_at");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("failure_reason");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -291,6 +291,11 @@ namespace WeeklyUp.Infrastructure.Persistence.Migrations
                         .HasDefaultValue("Free")
                         .HasColumnName("plan");
 
+                    b.Property<string>("StripeCustomerId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("stripe_customer_id");
+
                     b.Property<string>("Timezone")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -301,6 +306,11 @@ namespace WeeklyUp.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<string>("VerificationToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("verification_token");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ExternalAuthId")
@@ -308,20 +318,22 @@ namespace WeeklyUp.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_users_external_auth_id")
                         .HasFilter("external_auth_id IS NOT NULL");
 
+                    b.HasIndex("StripeCustomerId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_stripe_customer_id")
+                        .HasFilter("stripe_customer_id IS NOT NULL");
+
                     b.ToTable("users", "public");
                 });
 
             modelBuilder.Entity("WeeklyUp.Domain.Entities.Integration", b =>
                 {
                     b.HasOne("WeeklyUp.Domain.Entities.User", null)
-                        .WithMany()
+                        .WithMany("Integrations")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WeeklyUp.Domain.Entities.User", null)
-                        .WithMany("Integrations")
-                        .HasForeignKey("UserId1");
+                        .IsRequired()
+                        .HasConstraintName("fk_integrations_users");
                 });
 
             modelBuilder.Entity("WeeklyUp.Domain.Entities.Report", b =>

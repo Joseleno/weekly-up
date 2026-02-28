@@ -1,0 +1,45 @@
+@attribute [AllowAnonymous]
+
+<MudPaper Elevation="0" Class="py-12 px-4" Style="background: var(--mud-palette-background-grey)">
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-8"><b>Como funciona</b></MudText>
+
+        <MudGrid Justify="Justify.Center">
+            @foreach (var step in _steps)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-4">
+                        <MudAvatar Color="Color.Primary" Size="Size.Large" Variant="Variant.Filled">
+                            <MudIcon Icon="@step.Icon" />
+                        </MudAvatar>
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center"><b>@step.Title</b></MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+                            @step.Description
+                        </MudText>
+                    </MudStack>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+@code {
+    private static readonly (string Icon, string Title, string Description)[] _steps =
+    [
+        (Icons.Material.Filled.PersonAdd,
+         "1. Crie sua conta",
+         "Cadastro gratuito em menos de 2 minutos. Sem cartão de crédito."),
+
+        (Icons.Material.Filled.Extension,
+         "2. Conecte suas ferramentas",
+         "Google Analytics, WhatsApp e outras integrações com um clique."),
+
+        (Icons.Material.Filled.AutoAwesome,
+         "3. IA analisa seus dados",
+         "Nossa IA coleta métricas, identifica tendências e gera insights personalizados."),
+
+        (Icons.Material.Filled.Email,
+         "4. Receba todo segunda",
+         "Relatório completo no seu e-mail toda segunda-feira às 8h."),
+    ];
+}

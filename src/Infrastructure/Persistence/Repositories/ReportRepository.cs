@@ -37,6 +37,24 @@ public sealed class ReportRepository : IReportRepository
         return list.AsReadOnly();
     }
 
+    public async Task<(IReadOnlyList<Report> Items, int TotalCount)> GetPagedHistoryAsync(
+        Guid userId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = _context.Reports
+            .AsNoTracking()
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.WeekRange.Start);
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items.AsReadOnly(), totalCount);
+    }
+
     public async Task<Report?> GetLatestAsync(Guid userId, CancellationToken ct = default) =>
         await _context.Reports
             .AsNoTracking()

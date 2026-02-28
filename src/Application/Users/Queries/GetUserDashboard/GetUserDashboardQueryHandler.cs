@@ -18,17 +18,20 @@ public sealed class GetUserDashboardQueryHandler
     private readonly IReportRepository _reports;
     private readonly IManualMetricRepository _manualMetrics;
     private readonly IApplicationCacheService _cache;
+    private readonly IDateTimeProvider _dateTime;
 
     public GetUserDashboardQueryHandler(
         IUserRepository users,
         IReportRepository reports,
         IManualMetricRepository manualMetrics,
-        IApplicationCacheService cache)
+        IApplicationCacheService cache,
+        IDateTimeProvider dateTime)
     {
         _users = users;
         _reports = reports;
         _manualMetrics = manualMetrics;
         _cache = cache;
+        _dateTime = dateTime;
     }
 
     public async ValueTask<Result<UserDashboardDto>> Handle(
@@ -48,7 +51,7 @@ public sealed class GetUserDashboardQueryHandler
             return AppError.NotFound("User.NotFound", $"Usuário '{query.UserId}' não encontrado.");
         }
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = _dateTime.Today;
         var currentWeekStart = GetCurrentWeekMonday(today);
 
         var latestReport = await _reports.GetLatestAsync(query.UserId, cancellationToken);

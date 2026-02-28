@@ -34,8 +34,8 @@ public sealed class GetReportHistoryQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var query = new GetReportHistoryQuery(userId, Page: 1, PageSize: 10);
-        _reports.GetHistoryAsync(userId, Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(Array.Empty<Report>());
+        _reports.GetPagedHistoryAsync(userId, 1, 10, Arg.Any<CancellationToken>())
+            .Returns((Array.Empty<Report>() as IReadOnlyList<Report>, 0));
 
         // Act
         Result<PagedListDto<ReportSummaryDto>> result = await _sut.Handle(query, CancellationToken.None);
@@ -54,11 +54,12 @@ public sealed class GetReportHistoryQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var query = new GetReportHistoryQuery(userId, Page: 1, PageSize: 5);
-        var reports = Enumerable.Range(0, 8)
+        var pageReports = Enumerable.Range(0, 5)
             .Select(i => CreateReport(userId, i))
             .ToList()
             .AsReadOnly() as IReadOnlyList<Report>;
-        _reports.GetHistoryAsync(userId, Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(reports!);
+        _reports.GetPagedHistoryAsync(userId, 1, 5, Arg.Any<CancellationToken>())
+            .Returns((pageReports!, 8));
 
         // Act
         Result<PagedListDto<ReportSummaryDto>> result = await _sut.Handle(query, CancellationToken.None);
@@ -77,11 +78,8 @@ public sealed class GetReportHistoryQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var query = new GetReportHistoryQuery(userId, Page: 5, PageSize: 10);
-        var reports = Enumerable.Range(0, 3)
-            .Select(i => CreateReport(userId, i))
-            .ToList()
-            .AsReadOnly() as IReadOnlyList<Report>;
-        _reports.GetHistoryAsync(userId, Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(reports!);
+        _reports.GetPagedHistoryAsync(userId, 5, 10, Arg.Any<CancellationToken>())
+            .Returns((Array.Empty<Report>() as IReadOnlyList<Report>, 3));
 
         // Act
         Result<PagedListDto<ReportSummaryDto>> result = await _sut.Handle(query, CancellationToken.None);

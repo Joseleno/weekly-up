@@ -1,0 +1,150 @@
+@page "/reports"
+@attribute [Authorize]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Relatórios — WeeklyUp</PageTitle>
+
+<MudStack Spacing="4">
+    <MudText Typo="Typo.h5"><b>Relatórios</b></MudText>
+
+    @if (_loading)
+    {
+        <LoadingSpinner Message="Carregando relatórios..." />
+    }
+    else if (_error is not null)
+    {
+        <ErrorAlert Message="@_error" OnRetry="LoadAsync" />
+    }
+    else if (_paged is not null)
+    {
+        @if (_paged.TotalCount == 0)
+        {
+            <MudCard Elevation="1">
+                <MudCardContent>
+                    <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="py-8">
+                        <MudIcon Icon="@Icons.Material.Filled.Assessment"
+                                 Color="Color.Secondary" Style="font-size: 3rem;" />
+                        <MudText Typo="Typo.h6" Align="Align.Center">Nenhum relatório ainda</MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+                            Seu primeiro relatório será gerado na próxima segunda-feira.
+                        </MudText>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                @_paged.TotalCount relatório@(_paged.TotalCount != 1 ? "s" : "") no total
+            </MudText>
+
+            <MudStack Spacing="2">
+                @foreach (var report in _paged.Items)
+                {
+                    <MudCard Elevation="1" Class="cursor-pointer"
+                             @onclick="() => NavigateToDetail(report.Id)">
+                        <MudCardContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center"
+                                      Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                <MudStack Spacing="1">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Typo="Typo.subtitle1"><b>@report.WeekLabel</b></MudText>
+                                        <ReportStatusChip Status="@report.Status" />
+                                    </MudStack>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        Gerado em @report.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </MudText>
+                                </MudStack>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
+                                    @if (report.Revenue.HasValue)
+                                    {
+                                        <MudStack Spacing="0" AlignItems="AlignItems.End">
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">Receita</MudText>
+                                            <MudText Typo="Typo.subtitle2">
+                                                @report.Revenue.Value.ToString("C2", AppCultures.PtBr)
+                                            </MudText>
+                                        </MudStack>
+                                    }
+                                    @if (report.SalesCount.HasValue)
+                                    {
+                                        <MudStack Spacing="0" AlignItems="AlignItems.End">
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">Vendas</MudText>
+                                            <MudText Typo="Typo.subtitle2">@report.SalesCount.Value</MudText>
+                                        </MudStack>
+                                    }
+                                    <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                                   Color="Color.Default" Size="Size.Small" />
+                                </MudStack>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudStack>
+
+            @if (_paged.TotalCount > PageSize)
+            {
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudPagination Count="@TotalPages"
+                                   Selected="@_page"
+                                   SelectedChanged="OnPageChangedAsync"
+                                   Color="Color.Primary"
+                                   ShowFirstButton="true"
+                                   ShowLastButton="true" />
+                </MudStack>
+            }
+        }
+    }
+</MudStack>
+
+@code {
+    private const int PageSize = 10;
+
+    private readonly CancellationTokenSource _cts = new();
+    private PagedListResponse<ReportSummaryResponse>? _paged;
+    private bool _loading = true;
+    private string? _error;
+    private int _page = 1;
+
+    private int TotalPages => _paged is null
+        ? 1
+        : (int)Math.Ceiling(_paged.TotalCount / (double)PageSize);
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _paged = await ApiClient.GetReportHistoryAsync(_page, PageSize, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído durante carregamento — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Não foi possível carregar os relatórios. Verifique sua conexão.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnPageChangedAsync(int page)
+    {
+        _page = page;
+        await LoadAsync();
+    }
+
+    private void NavigateToDetail(Guid reportId) =>
+        Navigation.NavigateTo($"/reports/{reportId}");
+
+    public void Dispose() => _cts.Cancel();
+}

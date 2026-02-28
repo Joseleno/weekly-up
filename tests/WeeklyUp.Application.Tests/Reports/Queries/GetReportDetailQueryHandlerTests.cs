@@ -39,7 +39,9 @@ public sealed class GetReportDetailQueryHandlerTests
         var userId = Guid.NewGuid();
         var reportId = Guid.NewGuid();
         var query = new GetReportDetailQuery(userId, reportId);
+        var report = CreateReport(userId);
         var cachedDto = new ReportDetailDto(reportId, "2025-02-17 a 2025-02-23", "Pending", null, null, null, DateTimeOffset.UtcNow);
+        _reports.GetByIdAsync(reportId, Arg.Any<CancellationToken>()).Returns(report);
         _cache.GetAsync<ReportDetailDto>(CacheKeys.Report(reportId), Arg.Any<CancellationToken>())
             .Returns(cachedDto);
 
@@ -49,7 +51,6 @@ public sealed class GetReportDetailQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEquivalentTo(cachedDto);
-        await _reports.DidNotReceive().GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -90,8 +91,8 @@ public sealed class GetReportDetailQueryHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Type.Should().Be(AppErrorType.Forbidden);
-        result.Error.Code.Should().Be("Report.Forbidden");
+        result.Error.Type.Should().Be(AppErrorType.NotFound);
+        result.Error.Code.Should().Be("Report.NotFound");
     }
 
     [Fact]

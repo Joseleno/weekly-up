@@ -57,5 +57,6 @@ public sealed class IntegrationConfiguration : IEntityTypeConfiguration<Integrat
             .HasDatabaseName("ix_integrations_user_provider")
             .IsUnique()
             .HasFilter("status != 'Disconnected'");
+
     }
 }

@@ -12,6 +12,9 @@ public sealed class ConnectIntegrationCommandValidator : AbstractValidator<Conne
         RuleFor(x => x.AccessToken)
             .NotEmpty().WithMessage("AccessToken nao pode ser vazio.");
 
+        RuleFor(x => x.RefreshToken)
+            .NotEmpty().WithMessage("RefreshToken nao pode ser vazio.");
+
         RuleFor(x => x.AccountId)
             .NotEmpty().WithMessage("AccountId nao pode ser vazio.");
     }

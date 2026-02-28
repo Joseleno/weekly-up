@@ -50,7 +50,7 @@ public sealed class GetUserProfileQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var query = new GetUserProfileQuery(userId);
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         _cache.GetAsync<UserProfileDto>(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((UserProfileDto?)null);
         _users.GetByIdAsync(userId, Arg.Any<CancellationToken>()).Returns(user);

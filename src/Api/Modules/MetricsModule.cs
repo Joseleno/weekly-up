@@ -21,7 +21,8 @@ public sealed class MetricsModule : ICarterModule
     {
         RouteGroupBuilder group = app.MapGroup("/api/metrics")
             .WithTags("Metrics")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting("api");
 
         group.MapPost("/", async (
             AddManualMetricRequest request,
@@ -40,6 +41,7 @@ public sealed class MetricsModule : ICarterModule
             return result.Match(
                 _ => Results.NoContent(),
                 error => error.ToProblem());
-        });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
     }
 }

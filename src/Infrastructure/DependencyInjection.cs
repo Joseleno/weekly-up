@@ -15,11 +15,13 @@ using StackExchange.Redis;
 using Stripe;
 
 using WeeklyUp.Application.Common.Interfaces;
+using WeeklyUp.Application.Common.Settings;
 using WeeklyUp.Domain.Interfaces;
 using WeeklyUp.Domain.Interfaces.Repositories;
 using WeeklyUp.Domain.Interfaces.Services;
 using WeeklyUp.Infrastructure.AI;
 using WeeklyUp.Infrastructure.BackgroundJobs;
+using WeeklyUp.Infrastructure.Billing;
 using WeeklyUp.Infrastructure.Caching;
 using WeeklyUp.Infrastructure.DataSources;
 using WeeklyUp.Infrastructure.DataSources.GoogleAnalytics;
@@ -37,6 +39,13 @@ namespace WeeklyUp.Infrastructure;
 
 public static class InfrastructureServiceExtensions
 {
+    private static class ExternalApiBaseUrls
+    {
+        public const string GoogleAnalytics = "https://analyticsdata.googleapis.com";
+        public const string Resend = "https://api.resend.com";
+        public const string Claude = "https://api.anthropic.com";
+    }
+
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -46,6 +55,7 @@ public static class InfrastructureServiceExtensions
             .AddCaching(configuration)
             .AddSecurity(configuration)
             .AddExternalServices(configuration)
+            .AddBilling(configuration)
             .AddBackgroundJobs(configuration);
 
         return services;
@@ -55,7 +65,7 @@ public static class InfrastructureServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var databaseConnectionString = configuration.GetConnectionString("Database");
+        string? databaseConnectionString = configuration.GetConnectionString("Database");
         if (string.IsNullOrWhiteSpace(databaseConnectionString))
         {
             throw new InvalidOperationException("ConnectionStrings:Database nao configurada. Verifique appsettings ou variaveis de ambiente.");
@@ -88,7 +98,7 @@ public static class InfrastructureServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var redisConnectionString = configuration.GetConnectionString("Redis");
+        string? redisConnectionString = configuration.GetConnectionString("Redis");
         if (string.IsNullOrWhiteSpace(redisConnectionString))
         {
             throw new InvalidOperationException("ConnectionStrings:Redis nao configurada. Verifique appsettings ou variaveis de ambiente.");
@@ -121,14 +131,17 @@ public static class InfrastructureServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<ResendOptions>(configuration.GetSection("Resend"));
+        services.AddOptions<ResendOptions>()
+            .Bind(configuration.GetSection("Resend"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         services.Configure<EvolutionApiOptions>(configuration.GetSection("EvolutionApi"));
         services.Configure<ClaudeOptions>(configuration.GetSection("Claude"));
 
         services
             .AddRefitClient<IGoogleAnalyticsClient>()
             .ConfigureHttpClient(c =>
-                c.BaseAddress = new Uri("https://analyticsdata.googleapis.com"))
+                c.BaseAddress = new Uri(ExternalApiBaseUrls.GoogleAnalytics))
             .AddTransientHttpErrorPolicy(p =>
                 p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
             .AddTransientHttpErrorPolicy(p =>
@@ -141,7 +154,7 @@ public static class InfrastructureServiceExtensions
         services.AddTransient<EvolutionApiAuthHandler>();
 
         services.AddHttpClient("resend", c =>
-            c.BaseAddress = new Uri("https://api.resend.com"))
+            c.BaseAddress = new Uri(ExternalApiBaseUrls.Resend))
             .AddHttpMessageHandler<ResendAuthHandler>()
             .AddTransientHttpErrorPolicy(p =>
                 p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
@@ -149,7 +162,7 @@ public static class InfrastructureServiceExtensions
                 p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
         services.AddHttpClient("claude", c =>
-            c.BaseAddress = new Uri("https://api.anthropic.com"))
+            c.BaseAddress = new Uri(ExternalApiBaseUrls.Claude))
             .AddHttpMessageHandler<ClaudeAuthHandler>()
             .AddTransientHttpErrorPolicy(p =>
                 p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
@@ -158,7 +171,7 @@ public static class InfrastructureServiceExtensions
 
         services.AddHttpClient("evolutionapi", (sp, c) =>
         {
-            var opts = sp.GetRequiredService<IOptions<EvolutionApiOptions>>().Value;
+            EvolutionApiOptions opts = sp.GetRequiredService<IOptions<EvolutionApiOptions>>().Value;
             c.BaseAddress = new Uri(opts.BaseUrl);
         })
             .AddHttpMessageHandler<EvolutionApiAuthHandler>()
@@ -167,7 +180,6 @@ public static class InfrastructureServiceExtensions
             .AddTransientHttpErrorPolicy(p =>
                 p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
-        services.AddScoped<ChargeService>();
         services.AddScoped<IDataSourceProvider, GoogleAnalyticsProvider>();
         services.AddScoped<IDataSourceProvider, StripeDataProvider>();
         services.AddScoped<IDataSourceProvider, ManualDataProvider>();
@@ -200,6 +212,30 @@ public static class InfrastructureServiceExtensions
         {
             throw new InvalidOperationException("EvolutionApi:BaseUrl nao configurada. Verifique appsettings ou variaveis de ambiente.");
         }
+
+        if (string.IsNullOrWhiteSpace(configuration["Stripe:SecretKey"]))
+        {
+            throw new InvalidOperationException("Stripe:SecretKey nao configurada. Verifique appsettings ou variaveis de ambiente.");
+        }
+    }
+
+    private static IServiceCollection AddBilling(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<StripeOptions>(configuration.GetSection("Stripe"));
+        services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
+
+        // Stripe.NET usa configuração global de ApiKey. Para multi-tenant, passar RequestOptions por chamada.
+        // Este projeto é single-tenant SaaS — configuração global é adequada.
+        StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"] ?? string.Empty;
+
+        services.AddScoped<CustomerService>();
+        services.AddScoped<Stripe.Checkout.SessionService>();
+        services.AddScoped<Stripe.BillingPortal.SessionService>();
+        services.AddScoped<IStripeService, StripeService>();
+        services.AddScoped<ChargeService>();
+        return services;
     }
 
     private static IServiceCollection AddBackgroundJobs(
@@ -218,9 +254,11 @@ public static class InfrastructureServiceExtensions
         services.AddHangfireServer();
 
         services.AddScoped<WeeklyReportGenerationJob>();
+        services.AddScoped<ReportDataGenerationJob>();
         services.AddScoped<ReportSendingJob>();
         services.AddScoped<IntegrationSyncJob>();
         services.AddScoped<TokenRefreshJob>();
+        services.AddScoped<IReportJobScheduler, HangfireReportJobScheduler>();
 
         return services;
     }

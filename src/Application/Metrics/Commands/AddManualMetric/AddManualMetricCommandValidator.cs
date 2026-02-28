@@ -6,6 +6,10 @@ public sealed class AddManualMetricCommandValidator : AbstractValidator<AddManua
 {
     public AddManualMetricCommandValidator()
     {
+        RuleFor(x => x.WeekStart)
+            .Must(d => d.DayOfWeek == DayOfWeek.Monday)
+            .WithMessage("A data de inicio da semana deve ser uma segunda-feira.");
+
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("UserId nao pode ser vazio.");
 

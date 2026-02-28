@@ -19,11 +19,14 @@ public sealed class GetUserDashboardQueryHandlerTests
     private readonly IReportRepository _reports = Substitute.For<IReportRepository>();
     private readonly IManualMetricRepository _manualMetrics = Substitute.For<IManualMetricRepository>();
     private readonly IApplicationCacheService _cache = Substitute.For<IApplicationCacheService>();
+    private readonly IDateTimeProvider _dateTime = Substitute.For<IDateTimeProvider>();
     private readonly GetUserDashboardQueryHandler _sut;
 
     public GetUserDashboardQueryHandlerTests()
     {
-        _sut = new GetUserDashboardQueryHandler(_users, _reports, _manualMetrics, _cache);
+        _dateTime.UtcNow.Returns(new DateTime(2026, 2, 26, 12, 0, 0, DateTimeKind.Utc));
+        _dateTime.Today.Returns(new DateOnly(2026, 2, 26));
+        _sut = new GetUserDashboardQueryHandler(_users, _reports, _manualMetrics, _cache, _dateTime);
     }
 
     [Fact]
@@ -53,7 +56,7 @@ public sealed class GetUserDashboardQueryHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var query = new GetUserDashboardQuery(userId);
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         _cache.GetAsync<UserDashboardDto>(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((UserDashboardDto?)null);
         _users.GetByIdWithIntegrationsAsync(userId, Arg.Any<CancellationToken>()).Returns(user);

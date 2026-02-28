@@ -53,7 +53,7 @@ public sealed class ConnectIntegrationCommandHandlerTests
         var command = new ConnectIntegrationCommand(
             userId, IntegrationProvider.GoogleAnalytics4,
             "access-token", "refresh-token", "account-123", null);
-        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce).Value;
+        var user = User.Create("test@example.com", "Test User", "Test Business", BusinessType.Ecommerce, verificationToken: "test-token").Value;
         _users.GetByIdWithIntegrationsAsync(userId, Arg.Any<CancellationToken>()).Returns(user);
 
         // Act

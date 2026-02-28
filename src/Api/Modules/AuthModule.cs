@@ -14,7 +14,8 @@ public sealed class AuthModule : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         RouteGroupBuilder group = app.MapGroup("/api/auth")
-            .WithTags("Auth");
+            .WithTags("Auth")
+            .RequireRateLimiting("api");
 
         group.MapPost("/login", async (
             LoginRequest request,
