@@ -127,6 +127,36 @@ public sealed class ApiClient(HttpClient httpClient) : IApiClient
         await EnsureSuccessOrThrowAsync(response, ct);
     }
 
+    public async Task<ReportPreferencesResponse?> GetReportPreferencesAsync(
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("api/reports/preferences", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<ReportPreferencesResponse>(ct);
+    }
+
+    public async Task DisconnectIntegrationAsync(string provider, CancellationToken ct = default)
+    {
+        var response = await httpClient.DeleteAsync($"api/integrations/{provider}", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
+    public async Task<InstagramAuthUrlResponse?> GetInstagramAuthUrlAsync(
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("api/integrations/instagram/auth", ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<InstagramAuthUrlResponse>(ct);
+    }
+
+    public async Task CompleteInstagramOAuthAsync(
+        string code, string state, CancellationToken ct = default)
+    {
+        var url = $"api/integrations/instagram/callback?code={Uri.EscapeDataString(code)}&state={Uri.EscapeDataString(state)}";
+        var response = await httpClient.GetAsync(url, ct);
+        await EnsureSuccessOrThrowAsync(response, ct);
+    }
+
     private static async Task EnsureSuccessOrThrowAsync(
         HttpResponseMessage response,
         CancellationToken ct)

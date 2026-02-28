@@ -3,15 +3,19 @@
   <PropertyGroup>
     <RootNamespace>WeeklyUp.WebApp</RootNamespace>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <!-- WebApp usa net9.0: MudBlazor 8.x e Blazor-ApexCharts ainda não suportam net10.0 -->
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Blazored.LocalStorage" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" />
-    <PackageReference Include="Microsoft.Extensions.Http" />
+    <!-- VersionOverride: pacotes WASM 10.0.0 não suportam net9.0 — usar versão 9.0.3 -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" VersionOverride="9.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" VersionOverride="9.0.3" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" VersionOverride="9.0.3" />
+    <!-- Microsoft.Extensions.Http 10.0.0 não suporta net9.0 — usar versão 9.0.3 -->
+    <PackageReference Include="Microsoft.Extensions.Http" VersionOverride="9.0.3" />
     <PackageReference Include="Blazor-ApexCharts" />
   </ItemGroup>
 

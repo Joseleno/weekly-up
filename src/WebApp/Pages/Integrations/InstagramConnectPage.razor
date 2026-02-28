@@ -1,0 +1,59 @@
+@page "/integrations/connect/Instagram"
+@attribute [Authorize]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Conectar Instagram — WeeklyUp</PageTitle>
+
+<MudStack Spacing="4" AlignItems="AlignItems.Center" Style="padding-top: 4rem;">
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Preparando autorização do Instagram...</MudText>
+    }
+    else if (_error is not null)
+    {
+        <MudAlert Severity="Severity.Error">@_error</MudAlert>
+        <MudButton Variant="Variant.Outlined" OnClick="@(() => Navigation.NavigateTo("/integrations"))">
+            Voltar para integrações
+        </MudButton>
+    }
+</MudStack>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await ApiClient.GetInstagramAuthUrlAsync(_cts.Token);
+            if (response is null || string.IsNullOrWhiteSpace(response.Url))
+            {
+                _error = "Não foi possível obter a URL de autorização do Instagram.";
+                return;
+            }
+
+            Navigation.NavigateTo(response.Url, forceLoad: true);
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Erro ao conectar com o servidor. Verifique sua conexão e tente novamente.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

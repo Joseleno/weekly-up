@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <RootNamespace>WeeklyUp.WebApp.Tests</RootNamespace>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- TreatWarningsAsErrors herdado do Directory.Build.props -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="coverlet.collector" />
+    <!-- bUnit: framework de testes para Blazor -->
+    <PackageReference Include="bunit" VersionOverride="1.37.7" />
+    <!-- Pacotes net9.0 necessários para compatibilidade com WebApp -->
+    <PackageReference Include="MudBlazor" VersionOverride="8.5.0" />
+    <PackageReference Include="Blazored.LocalStorage" VersionOverride="4.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" VersionOverride="9.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WebApp\WebApp.csproj">
+      <ExcludeAssets>analyzers</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

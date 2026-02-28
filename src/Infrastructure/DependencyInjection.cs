@@ -25,9 +25,11 @@ using WeeklyUp.Infrastructure.Billing;
 using WeeklyUp.Infrastructure.Caching;
 using WeeklyUp.Infrastructure.DataSources;
 using WeeklyUp.Infrastructure.DataSources.GoogleAnalytics;
+using WeeklyUp.Infrastructure.DataSources.Instagram;
 using WeeklyUp.Infrastructure.DataSources.Manual;
 using WeeklyUp.Infrastructure.DataSources.Stripe;
 using WeeklyUp.Infrastructure.Email;
+using WeeklyUp.Infrastructure.Instagram;
 using WeeklyUp.Infrastructure.Persistence;
 using WeeklyUp.Infrastructure.Persistence.Interceptors;
 using WeeklyUp.Infrastructure.Persistence.Repositories;
@@ -121,6 +123,7 @@ public static class InfrastructureServiceExtensions
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<ITokenEncryptor, AesTokenEncryptor>();
+        services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
@@ -187,6 +190,26 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IInsightGenerator, ClaudeInsightGenerator>();
         services.AddScoped<IEmailSender, ResendEmailSender>();
         services.AddScoped<IWhatsAppSender, EvolutionApiWhatsAppSender>();
+
+        // Instagram OAuth + Metrics
+        services.Configure<InstagramOptions>(configuration.GetSection("Instagram"));
+        services.AddSingleton<InstagramStateService>();
+        services.AddScoped<IInstagramOAuthService, InstagramOAuthService>();
+        services.AddScoped<IDataSourceProvider, InstagramMetricsProvider>();
+
+        services.AddHttpClient("instagram-oauth", c =>
+            c.BaseAddress = new Uri("https://api.instagram.com"))
+            .AddTransientHttpErrorPolicy(p =>
+                p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
+            .AddTransientHttpErrorPolicy(p =>
+                p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+
+        services.AddHttpClient("instagram-graph", c =>
+            c.BaseAddress = new Uri("https://graph.instagram.com"))
+            .AddTransientHttpErrorPolicy(p =>
+                p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
+            .AddTransientHttpErrorPolicy(p =>
+                p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
         return services;
     }

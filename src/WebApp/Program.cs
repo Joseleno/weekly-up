@@ -17,12 +17,12 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
-builder.Services.AddSingleton<JwtAuthenticationStateProvider>();
-builder.Services.AddSingleton<AuthenticationStateProvider>(sp =>
+builder.Services.AddScoped<JwtAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
     sp.GetRequiredService<JwtAuthenticationStateProvider>());
-builder.Services.AddSingleton<IAuthStateNotifier>(sp =>
+builder.Services.AddScoped<IAuthStateNotifier>(sp =>
     sp.GetRequiredService<JwtAuthenticationStateProvider>());
-builder.Services.AddSingleton<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddWeeklyUpHttpClient(builder.Configuration);
 
 await builder.Build().RunAsync();

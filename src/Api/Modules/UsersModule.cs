@@ -4,7 +4,6 @@ using Mediator;
 
 using WeeklyUp.Api.Extensions;
 using WeeklyUp.Application.Common.Interfaces;
-using WeeklyUp.Application.Users.Commands.RegisterUser;
 using WeeklyUp.Application.Users.Commands.UpdateUserProfile;
 using WeeklyUp.Application.Users.Commands.UpgradePlan;
 using WeeklyUp.Application.Users.Commands.VerifyEmail;
@@ -13,13 +12,6 @@ using WeeklyUp.Application.Users.Queries.GetUserProfile;
 using WeeklyUp.Domain.Enums;
 
 namespace WeeklyUp.Api.Modules;
-
-public sealed record RegisterUserRequest(
-    string Email,
-    string Name,
-    string BusinessName,
-    BusinessType BusinessType,
-    string? ExternalAuthId);
 
 public sealed record VerifyEmailRequest(Guid UserId, string Token);
 
@@ -37,23 +29,6 @@ public sealed class UsersModule : ICarterModule
         RouteGroupBuilder group = app.MapGroup("/api/users")
             .WithTags("Users")
             .RequireRateLimiting("api");
-
-        group.MapPost("/", async (
-            RegisterUserRequest request,
-            IMediator mediator,
-            CancellationToken ct) =>
-        {
-            var command = new RegisterUserCommand(
-                request.Email,
-                request.Name,
-                request.BusinessName,
-                request.BusinessType,
-                request.ExternalAuthId);
-            var result = await mediator.Send(command, ct);
-            return result.Match(
-                dto => Results.Created($"/api/users/{dto.Id}", dto),
-                error => error.ToProblem());
-        });
 
         group.MapPost("/verify", async (
             VerifyEmailRequest request,

@@ -9,10 +9,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
-    <link href="WeeklyUp.WebApp.styles.css" rel="stylesheet" />
+    <!-- WeeklyUp.WebApp.styles.css gerado automaticamente pelo build quando há CSS isolation -->
     <link href="manifest.webmanifest" rel="manifest" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="apple-touch-icon" href="icon-192.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="WeeklyUp" />
@@ -35,7 +36,7 @@
     </div>
 
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="_content/Blazor-ApexCharts/js/blazor-apexcharts.js"></script>
+    <script src="_content/Blazor-ApexCharts/js/blazor-apexcharts.js" type="module"></script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js').catch(err => {
         console.error('Service worker registration failed:', err);

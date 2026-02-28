@@ -1,0 +1,77 @@
+@page "/integrations/callback/instagram"
+@attribute [Authorize]
+@implements IDisposable
+
+@inject IApiClient ApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Conectando Instagram — WeeklyUp</PageTitle>
+
+<MudStack Spacing="4" AlignItems="AlignItems.Center" Style="padding-top: 4rem;">
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Finalizando conexão com Instagram...</MudText>
+    }
+    else if (_error is not null)
+    {
+        <MudAlert Severity="Severity.Error">@_error</MudAlert>
+        <MudButton Variant="Variant.Outlined" OnClick="@(() => Navigation.NavigateTo("/integrations"))">
+            Voltar para integrações
+        </MudButton>
+    }
+</MudStack>
+
+@code {
+    [SupplyParameterFromQuery(Name = "code")]
+    private string? Code { get; set; }
+
+    [SupplyParameterFromQuery(Name = "state")]
+    private string? State { get; set; }
+
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? OAuthError { get; set; }
+
+    private readonly CancellationTokenSource _cts = new();
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(OAuthError))
+        {
+            _error = "A autorização do Instagram foi recusada ou cancelada.";
+            _loading = false;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Code) || string.IsNullOrWhiteSpace(State))
+        {
+            _error = "Parâmetros OAuth inválidos.";
+            _loading = false;
+            return;
+        }
+
+        try
+        {
+            await ApiClient.CompleteInstagramOAuthAsync(Code, State, _cts.Token);
+            Snackbar.Add("Instagram conectado com sucesso!", Severity.Success);
+            Navigation.NavigateTo("/integrations");
+        }
+        catch (OperationCanceledException)
+        {
+            // componente destruído — ignorar
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Erro ao finalizar a conexão com o Instagram. Tente novamente.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

@@ -35,4 +35,12 @@ public interface IApiClient
     public Task UpdateReportPreferencesAsync(
         UpdateReportPreferencesRequest request,
         CancellationToken ct = default);
+
+    public Task<ReportPreferencesResponse?> GetReportPreferencesAsync(CancellationToken ct = default);
+
+    public Task DisconnectIntegrationAsync(string provider, CancellationToken ct = default);
+
+    public Task<InstagramAuthUrlResponse?> GetInstagramAuthUrlAsync(CancellationToken ct = default);
+
+    public Task CompleteInstagramOAuthAsync(string code, string state, CancellationToken ct = default);
 }

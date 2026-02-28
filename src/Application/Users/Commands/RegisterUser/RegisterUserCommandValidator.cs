@@ -11,6 +11,11 @@ public sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUse
             .EmailAddress()
             .MaximumLength(255);
 
+        RuleFor(x => x.Password)
+            .NotEmpty()
+            .MinimumLength(8)
+            .MaximumLength(128);
+
         RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(255);

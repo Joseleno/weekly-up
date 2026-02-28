@@ -1,21 +1,35 @@
 using Mediator;
 
 using WeeklyUp.Application.Common.DTOs;
-using WeeklyUp.Application.Common.Mappings;
+using WeeklyUp.Application.Common.Interfaces;
 using WeeklyUp.Domain.Entities;
 using WeeklyUp.Domain.Interfaces;
+using WeeklyUp.Domain.Interfaces.Services;
 using WeeklyUp.Shared.Results;
 
 namespace WeeklyUp.Application.Users.Commands.RegisterUser;
 
 public sealed class RegisterUserCommandHandler
-    : ICommandHandler<RegisterUserCommand, Result<UserProfileDto>>
+    : ICommandHandler<RegisterUserCommand, Result<AuthTokenDto>>
 {
     private readonly IUnitOfWork _uow;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
-    public RegisterUserCommandHandler(IUnitOfWork uow) => _uow = uow;
+    public RegisterUserCommandHandler(
+        IUnitOfWork uow,
+        IPasswordHasher passwordHasher,
+        IJwtTokenGenerator jwtTokenGenerator,
+        IDateTimeProvider dateTimeProvider)
+    {
+        _uow = uow;
+        _passwordHasher = passwordHasher;
+        _jwtTokenGenerator = jwtTokenGenerator;
+        _dateTimeProvider = dateTimeProvider;
+    }
 
-    public async ValueTask<Result<UserProfileDto>> Handle(
+    public async ValueTask<Result<AuthTokenDto>> Handle(
         RegisterUserCommand command,
         CancellationToken cancellationToken)
     {
@@ -25,17 +39,17 @@ public sealed class RegisterUserCommandHandler
             return AppError.Conflict("User.EmailAlreadyExists", "Email ja esta em uso.");
         }
 
-        var verificationToken = command.ExternalAuthId is null
-            ? Guid.NewGuid().ToString("N")
-            : null;
+        string verificationToken = Guid.NewGuid().ToString("N");
+        string passwordHash = _passwordHasher.Hash(command.Password);
 
         Result<User> userResult = User.Create(
             command.Email,
             command.Name,
             command.BusinessName,
             command.BusinessType,
-            command.ExternalAuthId,
-            verificationToken);
+            externalAuthId: null,
+            verificationToken: verificationToken,
+            passwordHash: passwordHash);
 
         if (userResult.IsFailure)
         {
@@ -48,6 +62,8 @@ public sealed class RegisterUserCommandHandler
         await _uow.Users.AddAsync(user, cancellationToken);
         await _uow.ReportPreferences.AddAsync(preference, cancellationToken);
 
-        return user.ToProfileDto();
+        string token = _jwtTokenGenerator.GenerateToken(user);
+        var expiresAt = new DateTimeOffset(_dateTimeProvider.UtcNow).AddHours(1);
+        return new AuthTokenDto(token, expiresAt);
     }
 }

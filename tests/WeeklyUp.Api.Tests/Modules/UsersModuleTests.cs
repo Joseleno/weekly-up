@@ -12,7 +12,6 @@ using NSubstitute;
 
 using WeeklyUp.Api.Tests.Infrastructure;
 using WeeklyUp.Application.Common.DTOs;
-using WeeklyUp.Application.Users.Commands.RegisterUser;
 using WeeklyUp.Application.Users.Commands.UpdateUserProfile;
 using WeeklyUp.Application.Users.Commands.UpgradePlan;
 using WeeklyUp.Application.Users.Commands.VerifyEmail;
@@ -35,63 +34,6 @@ public sealed class UsersModuleTests
         _fixture = fixture;
         _anonClient = fixture.CreateAnonymousClient();
         _authClient = fixture.CreateAuthenticatedClient();
-    }
-
-    // ─── POST /api/users ─────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task RegisterUser_QuandoValido_Retorna201()
-    {
-        // Arrange
-        var profile = new UserProfileDto(
-            Guid.NewGuid(), "user@test.com", "Nome", "Loja",
-            "Ecommerce", "Free", false, true, DateTimeOffset.UtcNow);
-
-        _fixture.Mediator
-            .Send(Arg.Any<RegisterUserCommand>(), Arg.Any<CancellationToken>())
-            .Returns((_) => ValueTask.FromResult(Result.Success(profile)));
-
-        var body = new
-        {
-            Email = "user@test.com",
-            Name = "Nome",
-            BusinessName = "Loja",
-            BusinessType = BusinessType.Ecommerce,
-            ExternalAuthId = (string?)null,
-        };
-
-        // Act
-        HttpResponseMessage response = await _anonClient.PostAsJsonAsync("/api/users", body);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-        response.Headers.Location.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task RegisterUser_QuandoConflito_Retorna409()
-    {
-        // Arrange
-        var error = AppError.Conflict("User.EmailAlreadyExists", "Email já cadastrado.");
-        _fixture.Mediator
-            .Send(Arg.Any<RegisterUserCommand>(), Arg.Any<CancellationToken>())
-            .Returns((_) => ValueTask.FromResult(
-                Result.Failure<UserProfileDto>(error)));
-
-        var body = new
-        {
-            Email = "duplicate@test.com",
-            Name = "Nome",
-            BusinessName = "Loja",
-            BusinessType = BusinessType.Ecommerce,
-            ExternalAuthId = (string?)null,
-        };
-
-        // Act
-        HttpResponseMessage response = await _anonClient.PostAsJsonAsync("/api/users", body);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
     // ─── POST /api/users/verify ───────────────────────────────────────────────

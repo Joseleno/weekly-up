@@ -97,10 +97,8 @@
     // DEVE corresponder exatamente ao enum IntegrationProvider em Domain/Enums/IntegrationProvider.cs
     private static readonly Dictionary<string, (string Label, string Icon)> _supportedProviders = new()
     {
-        ["GoogleAnalytics"] = ("Google Analytics", Icons.Material.Filled.BarChart),
-        ["Shopify"]         = ("Shopify",           Icons.Material.Filled.Store),
-        ["WooCommerce"]     = ("WooCommerce",        Icons.Material.Filled.ShoppingCart),
-        ["WhatsApp"]        = ("WhatsApp Business",  Icons.Material.Filled.Chat),
+        ["GoogleAnalytics4"] = ("Google Analytics",  Icons.Material.Filled.BarChart),
+        ["Instagram"]        = ("Instagram",          Icons.Material.Filled.PhotoCamera),
     };
 
     private readonly CancellationTokenSource _cts = new();
@@ -152,8 +150,17 @@
 
         if (result is { Canceled: false })
         {
-            // TODO: chamar ApiClient.DisconnectIntegrationAsync(provider, _cts.Token) quando endpoint for adicionado ao IApiClient
-            Snackbar.Add("Funcionalidade em breve", Severity.Info);
+            try
+            {
+                await ApiClient.DisconnectIntegrationAsync(provider, _cts.Token);
+                _integrations?.RemoveAll(i => i.Provider == provider);
+                Snackbar.Add($"{label} desconectado com sucesso.", Severity.Success);
+            }
+            catch (OperationCanceledException) { }
+            catch (HttpRequestException)
+            {
+                Snackbar.Add("Erro ao desconectar. Tente novamente.", Severity.Error);
+            }
         }
     }
 

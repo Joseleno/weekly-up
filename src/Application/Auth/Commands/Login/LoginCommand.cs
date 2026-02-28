@@ -6,5 +6,5 @@ using WeeklyUp.Shared.Results;
 namespace WeeklyUp.Application.Auth.Commands.Login;
 
 public sealed record LoginCommand(
-    string ExternalAuthId,
-    string Email) : ICommand<Result<AuthTokenDto>>;
+    string Email,
+    string Password) : ICommand<Result<AuthTokenDto>>;

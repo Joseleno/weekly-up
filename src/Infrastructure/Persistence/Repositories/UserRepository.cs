@@ -36,6 +36,11 @@ public sealed class UserRepository : IUserRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.ExternalAuthId == externalId, ct);
 
+    public async Task<User?> GetByVerificationTokenAsync(string token, CancellationToken ct = default) =>
+        await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.VerificationToken == token, ct);
+
     public async Task<IReadOnlyList<User>> GetActiveUsersForReportAsync(
         DayOfWeekPreference day, CancellationToken ct = default)
     {

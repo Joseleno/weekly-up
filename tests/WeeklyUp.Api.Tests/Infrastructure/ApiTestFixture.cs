@@ -75,8 +75,19 @@ public sealed class ApiTestFixture : IAsyncLifetime
 
                 builder.ConfigureServices(services =>
                 {
-                    // Replace DbContext with InMemory to avoid real DB connection
-                    services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
+                    // Replace DbContext with InMemory to avoid real DB connection.
+                    // Remove ALL EF Core-related descriptors to prevent "multiple providers" error.
+                    var dbDescriptors = services
+                        .Where(d => d.ServiceType.FullName?.Contains("EntityFramework") == true
+                            || d.ServiceType == typeof(ApplicationDbContext)
+                            || d.ServiceType == typeof(DbContextOptions)
+                            || d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>))
+                        .ToList();
+                    foreach (var descriptor in dbDescriptors)
+                    {
+                        services.Remove(descriptor);
+                    }
+
                     services.AddDbContext<ApplicationDbContext>(opts =>
                         opts.UseInMemoryDatabase("ApiTestDb_Modules"));
 

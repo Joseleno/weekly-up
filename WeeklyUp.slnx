@@ -11,6 +11,8 @@
     <Project Path="src/Infrastructure/Infrastructure.csproj" Id="1c2cc669-d9ee-4224-8d8e-7eed2432f0c1" />
     <Project Path="src/Shared/Shared.csproj" Id="fe7a6ca0-3383-4bc3-988b-6fb91ad1e1e1" />
     <Project Path="src/WebApp/WebApp.csproj" Id="a1b2c3d4-e5f6-7890-abcd-ef1234567890" />
+    <Project Path="src/AppHost/AppHost.csproj" />
+    <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/WeeklyUp.Api.Tests/WeeklyUp.Api.Tests.csproj" Id="26e72fda-3f34-40b1-892e-e84a039382b3" />
@@ -18,5 +20,6 @@
     <Project Path="tests/WeeklyUp.Architecture.Tests/WeeklyUp.Architecture.Tests.csproj" Id="e2bb773c-d61f-4b41-a838-06be87be9f08" />
     <Project Path="tests/WeeklyUp.Domain.Testes/WeeklyUp.Domain.Testes.csproj" Id="027e5aec-2c1c-4c28-b6e3-829aac74ddbd" />
     <Project Path="tests/WeeklyUp.Infrastructure.Tests/WeeklyUp.Infrastructure.Tests.csproj" Id="4eefcdb6-d011-4a9e-b0e1-d9ec7b226b6b" />
+    <Project Path="tests/WeeklyUp.WebApp.Tests/WeeklyUp.WebApp.Tests.csproj" Id="b5c6d7e8-f9a0-1234-bcde-f01234567891" />
   </Folder>
 </Solution>

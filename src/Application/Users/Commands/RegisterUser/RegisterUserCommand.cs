@@ -8,7 +8,7 @@ namespace WeeklyUp.Application.Users.Commands.RegisterUser;
 
 public sealed record RegisterUserCommand(
     string Email,
+    string Password,
     string Name,
     string BusinessName,
-    BusinessType BusinessType,
-    string? ExternalAuthId = null) : ICommand<Result<UserProfileDto>>;
+    BusinessType BusinessType) : ICommand<Result<AuthTokenDto>>;

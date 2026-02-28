@@ -172,9 +172,12 @@ else
                 _profileForm.BusinessType = _profile.BusinessType;
             }
 
-            // TODO: carregar preferências reais quando GetPreferencesAsync for adicionado ao IApiClient
-            _prefsForm.SendHour = 8;
-            _prefsForm.SendDayOfWeek = DayOfWeek.Monday;
+            var prefs = await ApiClient.GetReportPreferencesAsync(_cts.Token);
+            if (prefs is not null)
+            {
+                _prefsForm.SendHour = prefs.SendHour;
+                _prefsForm.SendDayOfWeek = prefs.SendDayOfWeek;
+            }
         }
         catch (OperationCanceledException)
         {
@@ -223,7 +226,10 @@ else
         try
         {
             await ApiClient.UpdateReportPreferencesAsync(
-                new UpdateReportPreferencesRequest(_prefsForm.SendHour, _prefsForm.SendDayOfWeek),
+                new UpdateReportPreferencesRequest(
+                    _prefsForm.SendDayOfWeek.ToString(),
+                    FormattableString.Invariant($"{_prefsForm.SendHour:D2}:00:00"),
+                    []),
                 _cts.Token);
 
             Snackbar.Add("Preferências de relatório salvas!", Severity.Success);

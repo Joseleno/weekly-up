@@ -8,6 +8,7 @@ using WeeklyUp.Application.Reports.Commands.GenerateWeeklyReport;
 using WeeklyUp.Application.Reports.Commands.UpdateReportPreferences;
 using WeeklyUp.Application.Reports.Queries.GetReportDetail;
 using WeeklyUp.Application.Reports.Queries.GetReportHistory;
+using WeeklyUp.Application.Reports.Queries.GetReportPreferences;
 using WeeklyUp.Domain.Enums;
 
 namespace WeeklyUp.Api.Modules;
@@ -48,6 +49,19 @@ public sealed class ReportsModule : ICarterModule
             CancellationToken ct) =>
         {
             var query = new GetReportDetailQuery(currentUser.UserId, id);
+            var result = await mediator.Send(query, ct);
+            return result.Match(
+                dto => Results.Ok(dto),
+                error => error.ToProblem());
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/preferences", async (
+            IMediator mediator,
+            ICurrentUserService currentUser,
+            CancellationToken ct) =>
+        {
+            var query = new GetReportPreferencesQuery(currentUser.UserId);
             var result = await mediator.Send(query, ct);
             return result.Match(
                 dto => Results.Ok(dto),

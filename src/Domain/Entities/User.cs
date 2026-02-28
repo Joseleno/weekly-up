@@ -21,6 +21,7 @@ public sealed class User : AggregateRoot
     public string Timezone { get; private set; } = DefaultTimezone;
     public PlanType Plan { get; private set; }
     public string? ExternalAuthId { get; private set; }
+    public string? PasswordHash { get; private set; }
     public string? StripeCustomerId { get; private set; }
     public string? PhoneNumber { get; private set; }
     public bool IsActive { get; private set; }
@@ -37,7 +38,8 @@ public sealed class User : AggregateRoot
         string businessName,
         BusinessType businessType,
         string? externalAuthId = null,
-        string? verificationToken = null)
+        string? verificationToken = null,
+        string? passwordHash = null)
     {
         Result<Email> emailResult = Email.Create(email);
         if (emailResult.IsFailure)
@@ -73,6 +75,7 @@ public sealed class User : AggregateRoot
             IsActive = true,
             IsEmailVerified = externalAuthId is not null,
             ExternalAuthId = externalAuthId,
+            PasswordHash = passwordHash,
             VerificationToken = externalAuthId is null ? verificationToken : null,
             VerificationTokenExpiresAt = externalAuthId is null && verificationToken is not null
                 ? DateTime.UtcNow.AddHours(24)
@@ -221,6 +224,23 @@ public sealed class User : AggregateRoot
         BusinessType = businessType;
         UpdatedAt = DateTime.UtcNow;
         return true;
+    }
+
+    public void SetPassword(string password, IPasswordHasher hasher)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        PasswordHash = hasher.Hash(password);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool VerifyPassword(string password, IPasswordHasher hasher)
+    {
+        if (string.IsNullOrWhiteSpace(PasswordHash))
+        {
+            return false;
+        }
+
+        return hasher.Verify(password, PasswordHash);
     }
 
     public void SetStripeCustomerId(string customerId)

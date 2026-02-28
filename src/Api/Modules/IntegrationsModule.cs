@@ -8,6 +8,8 @@ using WeeklyUp.Application.Integrations.Commands.ConnectIntegration;
 using WeeklyUp.Application.Integrations.Commands.DisconnectIntegration;
 using WeeklyUp.Application.Integrations.Queries.GetIntegrations;
 using WeeklyUp.Domain.Enums;
+using WeeklyUp.Infrastructure.Instagram;
+using WeeklyUp.Shared.Results;
 
 namespace WeeklyUp.Api.Modules;
 
@@ -70,6 +72,45 @@ public sealed class IntegrationsModule : ICarterModule
             var result = await mediator.Send(command, ct);
             return result.Match(
                 _ => Results.NoContent(),
+                error => error.ToProblem());
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
+
+        // Instagram OAuth — gera URL de autorização Meta
+        group.MapGet("/instagram/auth", (
+            ICurrentUserService currentUser,
+            InstagramStateService stateService,
+            IInstagramOAuthService oAuthService) =>
+        {
+            string state = stateService.GenerateState(currentUser.UserId);
+            string url = oAuthService.BuildAuthUrl(state);
+            return Results.Ok(new { url });
+        })
+        .Produces(StatusCodes.Status401Unauthorized);
+
+        // Instagram OAuth callback — chamado pelo WebApp após redirect do Meta
+        group.MapGet("/instagram/callback", async (
+            string code,
+            string state,
+            ICurrentUserService currentUser,
+            InstagramStateService stateService,
+            IInstagramOAuthService oAuthService,
+            CancellationToken ct) =>
+        {
+            var stateResult = stateService.ValidateState(state);
+            if (stateResult.IsFailure)
+            {
+                return stateResult.Error.ToProblem();
+            }
+
+            if (stateResult.Value != currentUser.UserId)
+            {
+                return AppError.Forbidden("Instagram.StateMismatch", "State inválido.").ToProblem();
+            }
+
+            var result = await oAuthService.ExchangeCodeAsync(code, currentUser.UserId, ct);
+            return result.Match(
+                dto => Results.Ok(dto),
                 error => error.ToProblem());
         })
         .Produces(StatusCodes.Status401Unauthorized);

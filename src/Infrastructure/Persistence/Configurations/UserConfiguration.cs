@@ -62,6 +62,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("external_auth_id")
             .HasMaxLength(200);
 
+        builder.Property(u => u.PasswordHash)
+            .HasColumnName("password_hash")
+            .HasMaxLength(512)
+            .IsRequired(false);
+
         builder.Property(u => u.PhoneNumber)
             .HasColumnName("phone_number")
             .HasMaxLength(30);

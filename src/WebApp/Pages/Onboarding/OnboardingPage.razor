@@ -182,8 +182,9 @@
             }
 
             await ApiClient.UpdateReportPreferencesAsync(new UpdateReportPreferencesRequest(
-                _reportHour,
-                DayOfWeek.Monday), _cts.Token);
+                "Monday",
+                FormattableString.Invariant($"{_reportHour:D2}:00:00"),
+                []), _cts.Token);
 
             Navigation.NavigateTo("/");
         }

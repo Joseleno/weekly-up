@@ -11,8 +11,8 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
             .EmailAddress()
             .MaximumLength(255);
 
-        RuleFor(x => x.ExternalAuthId)
+        RuleFor(x => x.Password)
             .NotEmpty()
-            .MaximumLength(500);
+            .MaximumLength(128);
     }
 }

@@ -10,12 +10,15 @@ using WeeklyUp.Domain.Interfaces;
 using WeeklyUp.Domain.Interfaces.Repositories;
 using WeeklyUp.Domain.Interfaces.Services;
 using WeeklyUp.Infrastructure.BackgroundJobs;
+using WeeklyUp.Infrastructure.Instagram;
 
 namespace WeeklyUp.Infrastructure.Tests.BackgroundJobs;
 
 public sealed class TokenRefreshJobTests
 {
     private readonly IUnitOfWork _uow = Substitute.For<IUnitOfWork>();
+    private readonly ITokenEncryptor _encryptor = Substitute.For<ITokenEncryptor>();
+    private readonly IInstagramOAuthService _instagramOAuth = Substitute.For<IInstagramOAuthService>();
     private readonly ILogger<TokenRefreshJob> _logger = Substitute.For<ILogger<TokenRefreshJob>>();
     private readonly IIntegrationRepository _integrations = Substitute.For<IIntegrationRepository>();
 
@@ -24,7 +27,7 @@ public sealed class TokenRefreshJobTests
         _uow.Integrations.Returns(_integrations);
     }
 
-    private TokenRefreshJob CreateJob() => new(_uow, _logger);
+    private TokenRefreshJob CreateJob() => new(_uow, _encryptor, _instagramOAuth, _logger);
 
     private static Integration CreateConnectedIntegration()
     {
